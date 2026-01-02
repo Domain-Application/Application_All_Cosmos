@@ -1,3 +1,0 @@
-Provider=SQLOLEDB.1;Persist Security Info=False;User ID=sa;Password=;Initial Catalog=allcos2;Data Source=domain-chan\sqlr2;
-Provider=SQLOLEDB.1;Persist Security Info=False;User ID=sa;Password=;Initial Catalog=allcos7;Data Source=domain-chan\sqlr2;
-Provider=SQLOLEDB.1;Persist Security Info=False;User ID=sa;Password=;Initial Catalog=allcosmos2wb;Data Source=domain-chan\sqlr2;
