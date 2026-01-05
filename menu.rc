@@ -409,7 +409,7 @@ END
 
 IDD_MENU_FORM DIALOGEX 0, 0, 922, 445
 STYLE WS_CHILD | WS_BORDER
-FONT 10, "MS Serif"
+FONT 10, "MS Serif", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "Detail Report",ID00011,28,42,113,16,BS_LEFT
     PUSHBUTTON      "Detail Report",ID00012,28,72,113,16,BS_LEFT
@@ -1202,10 +1202,10 @@ FONT 10, "MS Serif", 0, 0, 0x1
 BEGIN
 END
 
-IDD_SECURITY DIALOGEX 0, 0, 327, 322
+IDD_SECURITY DIALOGEX 0, 0, 327, 379
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Weighing Control"
-FONT 10, "System", 0, 0, 0x1
+FONT 10, "System"
 BEGIN
     DEFPUSHBUTTON   "F5->  Confirm Weight",IDOK,42,237,194,51,WS_DISABLED
     CONTROL         "",IDC_TEXTBOX1,"{8BD21D10-EC42-11CE-9E0D-00AA006002F3}",
@@ -1214,14 +1214,16 @@ BEGIN
                     WS_DISABLED | WS_TABSTOP,41,85,56,10
     CONTROL         "Stable",IDC_STABLE_FLAG,"Button",BS_AUTOCHECKBOX | 
                     WS_DISABLED | WS_TABSTOP,117,85,42,10
-    ICON            "",IDC_BR1,7,23,20,20
-    ICON            "",IDC_BR2,273,23,20,20
-    ICON            "",IDC_LED1,7,64,20,20
-    ICON            "",IDC_LED2,273,64,20,20
-    CONTROL         "",IDC_BR1UP,"Static",SS_ETCHEDFRAME,35,14,6,6
-    CONTROL         "",IDC_BR1DN,"Static",SS_ETCHEDFRAME,35,42,6,6
-    CONTROL         "",IDC_BR2UP,"Static",SS_ETCHEDFRAME,301,14,6,6
-    CONTROL         "",IDC_BR2DN,"Static",SS_ETCHEDFRAME,301,42,6,6
+    ICON            "",IDC_BR1,17,305,16,16,NOT WS_VISIBLE | WS_DISABLED
+    ICON            "",IDC_BR2,268,305,16,16,NOT WS_VISIBLE | WS_DISABLED
+    ICON            "",IDC_LED1,17,340,16,16,NOT WS_VISIBLE | WS_DISABLED
+    ICON            "",IDC_LED2,268,347,16,16,NOT WS_VISIBLE | WS_DISABLED
+    CONTROL         "",IDC_BR1UP,"Static",SS_ETCHEDFRAME | NOT WS_VISIBLE | 
+                    WS_DISABLED,45,296,6,6
+    CONTROL         "",IDC_BR1DN,"Static",SS_ETCHEDFRAME | NOT WS_VISIBLE | 
+                    WS_DISABLED,45,324,6,6
+    CONTROL         "",IDC_BR2UP,"Static",SS_ETCHEDFRAME,296,297,6,6
+    CONTROL         "",IDC_BR2DN,"Static",SS_ETCHEDFRAME,296,325,6,6
     PUSHBUTTON      "Licence Plate Number",IDC_BUTTON1,41,171,104,14
     PUSHBUTTON      "Container Number",IDC_BUTTON2,41,193,104,14
     CONTROL         "Receiving ",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON,52,
@@ -1240,10 +1242,14 @@ BEGIN
                     WS_EX_STATICEDGE
     LTEXT           "",IDC_PREVIEW3,242,237,60,51,SS_NOTIFY | NOT WS_VISIBLE,
                     WS_EX_STATICEDGE
-    PUSHBUTTON      "Open",IDC_BR1Open,7,14,26,8,BS_FLAT
-    PUSHBUTTON      "Open",IDC_BR2Open,273,14,27,8,BS_FLAT
-    PUSHBUTTON      "Close",IDC_BR2Close,273,42,27,8,BS_FLAT
-    PUSHBUTTON      "Close",IDC_BR1Close,7,42,26,8,BS_FLAT
+    PUSHBUTTON      "Open",IDC_BR1Open,17,296,26,8,BS_FLAT | NOT WS_VISIBLE | 
+                    WS_DISABLED
+    PUSHBUTTON      "Open",IDC_BR2Open,268,297,27,8,BS_FLAT | NOT WS_VISIBLE | 
+                    WS_DISABLED
+    PUSHBUTTON      "Close",IDC_BR2Close,268,325,27,8,BS_FLAT | NOT 
+                    WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON      "Close",IDC_BR1Close,17,324,26,8,BS_FLAT | NOT 
+                    WS_VISIBLE | WS_DISABLED
     PUSHBUTTON      "...",IDC_BUTTON4,220,171,17,14,BS_MULTILINE
     EDITTEXT        IDC_L1,146,171,72,14,ES_CENTER | ES_UPPERCASE | 
                     ES_AUTOHSCROLL | ES_READONLY
@@ -1251,7 +1257,7 @@ BEGIN
                     ES_AUTOHSCROLL | ES_READONLY
     PUSHBUTTON      "...",IDC_BUTTON6,220,193,17,14,BS_MULTILINE
     CONTROL         "Progress1",IDC_PROGRESS1,"msctls_progress32",WS_BORDER,
-                    11,313,316,9
+                    11,370,316,9
     LTEXT           "",IDC_PREVIEW4,242,139,60,19,NOT WS_VISIBLE,
                     WS_EX_STATICEDGE
     LTEXT           "",IDC_PREVIEW5,242,214,60,19,NOT WS_VISIBLE,
@@ -1262,6 +1268,8 @@ BEGIN
     EDITTEXT        IDC_L3,147,213,72,14,ES_CENTER | ES_UPPERCASE | 
                     ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_BUTTON8,221,213,17,14,BS_MULTILINE
+    CONTROL         "",IDC_S1,"Static",SS_BLACKFRAME,27,18,10,63
+    CONTROL         "",IDC_S2,"Static",SS_BLACKFRAME,272,18,10,63
 END
 
 IDD_TriggerLPR DIALOGEX 0, 0, 71, 136
@@ -1599,7 +1607,7 @@ BEGIN
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "menu.EXE\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "menu Application\0"
+            VALUE "ProductName", "WB01\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
             VALUE "SpecialBuild", "\0"
         END
@@ -1739,7 +1747,6 @@ BEGIN
     IDD_TriggerLPR, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 179
         TOPMARGIN, 7
         BOTTOMMARGIN, 85
     END
@@ -1905,7 +1912,7 @@ BEGIN
 0xc00c, 0xc0c0, 0xd900, 0x2100, 0x4000, 0x4000, 0x0600, 0x0000, 0x2100, 
 0x002f, 0x0600, 0x000d, 0x0000, 0x2802, 0xf700, 0x0000, 0x0f00, 0x0000, 
 0x0180, 0x0000, 0xa040, 0x0005, 0x0000, 0x0302, 0xbc00, 0x0002, 0x5400, 
-0x6d69, 0x7365, 0x4e20, 0x7765, 0x5220, 0x6d6f, 0x6e61, "\027" 
+0x6d69, 0x7365, 0x4e20, 0x7765, 0x5220, 0x6d6f, 0x6e61, "\155" 
     0
 END
 

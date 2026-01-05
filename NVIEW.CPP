@@ -333,7 +333,6 @@ void CNView::OnOpenOppositeBarrier()
         m_br2.CloseBarrier();
     }
     startOpenBarrier = FALSE;
-    requireAutoOpenFrontBarrier = FALSE;
     gateOpened_By_Security = FALSE;
 }
 
@@ -532,21 +531,6 @@ int CNView::OnGw()
         }
 	}
     InitiateDualMode();
-    if((DiData[manual_open_barrier1 - 1] && program4 == 1) || (isWBDualMode() && (DiData[manual_open_barrier2 - 1] && program4 == 2)))
-    {
-        gateOpened_By_Security = TRUE;
-        requireAutoOpenFrontBarrier = TRUE;
-    }
-    if(requireAutoOpenFrontBarrier)
-    {
-        if(startOpenBarrier)
-        {
-            return TRUE;
-        }
-        startOpenBarrier = TRUE;
-        OnOpenOppositeBarrier();
-    }
-
     return TRUE;
 }
 
@@ -647,15 +631,6 @@ void CNView::SetActiveStatus(DB *df,long rec)
 		g.SetText(df, REM,BIN | 0x100, -1);
 		return;
 	}
-    
-
-	if(!stricmp(df->name, "BIN_LIST"))
-	{
-		MGRID g(&m_grid2, df, rec);
-		g.show(rec);
-		g.SetText(df, 0,Bin_BINNO, Bin_TICKET,Bin_LORRYIN,Bin_LORRYIN_TIME,Bin_LORRYOUT,Bin_LORRYOUT_TIME, -1);
-		return;
-	}
 }
 
 void CNView::ShowInformation()
@@ -675,31 +650,11 @@ void CNView::ShowInformation()
         SetActiveStatus(&first,rec);
     } 
     m_grid.SetRedraw(TRUE);
-
-	bin_list.ReOpen();
-	long srec2 = read_sumindex(0,&bin_list);
-    m_grid2.SetRedraw(FALSE);
-    m_grid2.SetRows(srec2+1);
-    for(long rec2=1; rec2<=srec2; rec2++) {
-        readrec(rec2,&bin_list);
-        m_grid2.SetRow(rec2);
-        SetActiveStatus(&bin_list,rec2);
-    } 
-    m_grid2.SetRedraw(TRUE);
-
     CString str;
     str.Format("%ld",srec);
     SetDlgItemText(IDC_TOTAL_VEHICLE_IN_YARD,str);
-
     strSQL.Format("select Final_Count from Container_In_Yard");
     SetDlgItemText(IDC_CONT_IN_YARD, SqlText(strSQL));
-
-	CString strSQL2,strCnt;
-    strSQL2.Format("select distinct count(BIN) from BIN_LIST where INYARD_FLAG=1");
-	int cnt = (int)SqlValue(strSQL2);
-	strCnt.Format(_T("%d"), cnt);
-    SetDlgItemText(IDC_BIN_IN_YARD, strCnt);
-
     m_swGrid = FALSE;
 }
 

@@ -19,14 +19,11 @@
 #include "msflexgrid.h"
 #include "mycctv.h"
 //}}AFX_INCLUDES
-extern DB despatch_ticket_info, receive_ticket_info,bin_list;
-extern CString IsBlacklistedDriver(DB *df,CString drivercode);
+extern DB despatch_ticket_info, receive_ticket_info;
 extern BOOL DeletePic(const char *file);
-extern BOOL requireAutoOpenFrontBarrier;
 extern BOOL isWBDualMode();
 extern BOOL isManualSetting();
 extern CString push_plateno1,push_plateno2;
-extern BOOL isShuntingLorry(CString lorryNo);
 extern DB  reason,bin;
 extern DB  weighbrige,weighbrige2;
 extern void init_weighbrige(DB *df);
@@ -61,8 +58,6 @@ extern long tcpWeight;
 extern int STCR, program4;
 enum bindat {Bin_REFNO=1,Bin_BINNO,Bin_DATE,Bin_TICKET,Bin_LORRYIN,Bin_LORRYIN_TIME,Bin_INDRIVER,Bin_LORRYOUT,Bin_LORRYOUT_TIME,Bin_OUTDRIVER,Bin_INYARD_FLAG};
 enum bin{B_CODE=1,B_NAME,B_REMARKS,B_INYARD,B_INYARDTIME,B_OUTYARDTIME,B_SAVECOUNTER};
-extern BOOL OnBin_WeightIn_Info(DB *df,CString binno);
-extern BOOL OnBin_WeightOut_Info(DB *df,CString m_vehicle);
 extern DB  unit;
 extern DB  tt;
 extern DB  wbdata, prdata, dbdata, despatch;

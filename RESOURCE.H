@@ -296,7 +296,9 @@
 #define IDC_WT                          1250
 #define IDC_WB1                         1254
 #define IDC_WB2                         1255
+#define IDC_S1                          1255
 #define IDC_CONT_IN_YARD                1256
+#define IDC_S2                          1256
 #define IDC_BIN_IN_YARD                 1257
 #define IDC_MODELABEL                   1258
 #define IDC_BR2                         1259
@@ -346,7 +348,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        551
 #define _APS_NEXT_COMMAND_VALUE         32908
-#define _APS_NEXT_CONTROL_VALUE         1255
+#define _APS_NEXT_CONTROL_VALUE         1257
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

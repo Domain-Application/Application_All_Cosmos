@@ -30,7 +30,6 @@ CSecurity::CSecurity(CWnd* pParent /*=NULL*/)
 	//{{AFX_DATA_INIT(CSecurity)
 	m_vehicle = _T("");
 	m_contno = _T("");
-	m_bin = _T("");
 	//}}AFX_DATA_INIT
 	iCounter = jpgkey = 0;
 	isAutoMode = FALSE;
@@ -52,8 +51,6 @@ void CSecurity::DoDataExchange(CDataExchange* pDX)
 	DDV_MaxChars(pDX, m_vehicle, 20);
 	DDX_Text(pDX, IDC_L2, m_contno);
 	DDV_MaxChars(pDX, m_contno, 20);
-	DDX_Text(pDX, IDC_L3, m_bin);
-	DDV_MaxChars(pDX, m_bin, 20);
 	//}}AFX_DATA_MAP
 
     DDX_Control(pDX, IDC_BR1UP, m_led[0]);
@@ -90,7 +87,6 @@ END_MESSAGE_MAP()
 
 UINT PhotoThreadProc(LPVOID pParam)
 {
-	log_proceeding(" ->Start Photo Thread");
     PhotoThreadParam* p = (PhotoThreadParam*)pParam;
     CMenuApp* app = (CMenuApp*)AfxGetApp(); 
 
@@ -134,7 +130,6 @@ UINT PhotoThreadProc(LPVOID pParam)
     ::PostMessage(p->hWnd, WM_PHOTO_PROCESSED, 0, 0);
     
     delete p;
-	log_proceeding(" ->End Photo Thread");
     return 0;
 }
 
@@ -142,9 +137,6 @@ UINT PhotoThreadProc(LPVOID pParam)
 // CSecurity message handlers
 void CSecurity::OnButton5() 
 {
-	requireAutoOpenFrontBarrier = TRUE;
-	// CANPRListener anpr;
-	// anpr.StartListening(8080);
 }
 
 void CSecurity::OnDestroy() 
@@ -178,15 +170,9 @@ BOOL isManualSetting()
 
 BOOL CSecurity::OnInitDialog() 
 {
-	log_proceeding(" ->OnInitDialog");
-
     CFM20Dlg::OnInitDialog();
-
-
     SetWindowLocation( this );
-	log_proceeding(" ->Change window location");
 
-	
     CWnd *pS1 = (CWnd *)GetDlgItem(IDC_BR1UP);
     if(pS1) {
         m_led[0].SetLED(pS1,ID_LED_RED,ID_SHAPE_SQUARE,1000);
@@ -205,17 +191,12 @@ BOOL CSecurity::OnInitDialog()
     }
     CheckRadioButton( IDC_RADIO1, IDC_RADIO4, IDC_RADIO1);
     SetTimer(1,100,NULL);
-	log_proceeding(" ->Set Timer");
-
     for(int i=1; i<=5;i++) {
         CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
         previewWnd->GetWindowRect(PreviewRect[i]);
         ScreenToClient(&PreviewRect[i]);
-    }
-	log_proceeding(" ->Get preview location");
-	
-	
+    }	
 	CEdit *r = (CEdit *) GetDlgItem(IDC_L3);
 	r->SetReadOnly(FALSE);
 	r->SetFocus();
@@ -253,9 +234,6 @@ BOOL CSecurity::OnInitDialog()
 		q->SetReadOnly(FALSE);
 		q->SetFocus();
 	}
-	log_proceeding(" ->initd end");
-	
-	
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
@@ -270,14 +248,10 @@ void CSecurity::OnGW()
 	else {
 		sprintf(tmp,"%5.5ld kg",cweight);
 	}
-	log_proceeding( tmp );
-
     SetDlgItemText(IDC_TEXTBOX1, tmp );
-
     HWND hWnd = ::GetDlgItem( GetSafeHwnd(), IDC_ZERO_FLAG);
     UINT BST = (IsZeroWt == FALSE) ? BST_UNCHECKED : BST_CHECKED;
     ::SendMessage(hWnd, BM_SETCHECK, BST, 0L);
-	
 	long var =  20;
 	long count = 5;
     flagStable = IsHistoryWtStable(var, count);
@@ -349,12 +323,6 @@ void CSecurity::OnTimer(UINT nIDEvent)
 	if(nIDEvent==9001) {
 		iCounter--;
 		m_progress.SetPos(iCounter);
-
-		if( BarrierStatus(iBarrier) == FALSE) {
-//			if(iCounter>0) return;
-//temp don't check due to halt
-		}
-
 		KillTimer(nIDEvent);
         CFM20Dlg::OnOK();
 		return;
@@ -368,16 +336,12 @@ void CSecurity::OnTimer(UINT nIDEvent)
 	}
     else if(nIDEvent==2) {
 		KillTimer(nIDEvent);
-		log_proceeding(" -->Take photos start");
 		OnTakePhotos();
 		GetDlgItem(IDOK)->EnableWindow(TRUE);
         SetTimer(3,250,NULL);
-		log_proceeding(" -->Take photos end");
 		return;
 	}
-
     OnGW();
-	
     CFM20Dlg::OnTimer(nIDEvent);
 }
 
@@ -403,20 +367,6 @@ void CSecurity::OnProceed()
 		return;
 	}
 
-	//FIXME: revert ASAP
-#ifdef _DEBUG 
-	
-#else
-	if( BarrierStatus(1) ) {
-		MessageBox("Cannot weighing!!!","Barrier 1 still open", MB_ICONSTOP);
-		return;
-	}
-
-	if( BarrierStatus(2) ) {
-		MessageBox("Cannot weighing!!!","Barrier 2 still open", MB_ICONSTOP);
-		return;
-	}
-#endif
 	if( isblank( m_vehicle )) {
 		MessageBox("Vehicle Not found.","Error", MB_ICONSTOP);
 		return;
@@ -424,7 +374,6 @@ void CSecurity::OnProceed()
 	GetDlgItemText(IDC_L1, m_vehicle);
 	GetDlgItemText(IDC_L2, m_contno);
 	m_contno.TrimRight();
-	GetDlgItemText(IDC_L3, m_bin);
 	if(m_contno.GetLength()==11) {
         int flag = CheckContainerDigit( m_contno );
         if(flag != TRUE) {
@@ -433,8 +382,6 @@ void CSecurity::OnProceed()
 			if(ID==IDNO) return;
 		}
 	}
-
-
     int key = GetCheckedRadioButton(IDC_RADIO1,IDC_RADIO4);
     if(key==IDC_RADIO1) {
         OnRadio1(isLPR_OK, isCNR_OK);
@@ -448,22 +395,15 @@ void CSecurity::OnProceed()
     else if(key==IDC_RADIO4) {
         OnRadio4();
     }
-	
 }
 
 void CSecurity::OnOK() 
 {
 	SetDlgItemText( IDOK, "Proceeding...");
 	GetDlgItem( IDOK )->EnableWindow(FALSE);
-
 	OnProceed();
-
 	SetDlgItemText( IDOK, "F5->  Confirm Weight");
 	GetDlgItem( IDOK )->EnableWindow(TRUE);
-
-    
-	
-//	
 }
 
 // Helper for parsing XML logic
@@ -687,10 +627,6 @@ void CSecurity::ProcessCameraRequest(int nIndex)
             if (nIndex==1) {
                  m_vehicle = h.plateno;
                  SetDlgItemText(IDC_L1, m_vehicle);
-                 // Note: LPR usually updates photo 1 with its "Best" image. 
-                 // If we have crop, maybe that's best? Or full? 
-                 // Old logic updated strPhoto[1] with strDisplayImg.
-                 // Let's assume we want the Crop saved as the record for the plate if available.
                  CString strFinalSave = strFullImgPath;
                  
                  if (m_jpg[1].Load(strFinalSave)) {
@@ -741,43 +677,13 @@ void CSecurity::OnButton2()
 
 void CSecurity::OnButton7()  //brian to do//prompt viewidx master list to let user choose
 {
-	DB tmpdb1;
-	CString str,bincode;
-	str.Format("Select CODE,NAME from [bin]");
-	ado(&tmpdb1, "", NULL, str);
-	long mrec = viewidx(&tmpdb1);
-	//int rec = m_grid.GetMouseRow();
-	// HighlightSelection(&m_grid, rec);
-	bincode=tmpdb1.dat[1];
-	bincode.TrimRight();
-	if (mrec = 0)
-	{
-		AfxMessageBox("No records Found");
-	}
-	else
-	{
-		//RetrieveMPOB_Price(df);
-		m_bin = bincode;
-	}
-	
-	dclose(&tmpdb1);
-
-	SetDlgItemText(IDC_L3,m_bin);
-	CEdit *r = (CEdit *) GetDlgItem(IDC_L3);
-	r->SetReadOnly(TRUE);
-	r->SetFocus();
-	UpdateData(FALSE);
 }
 void CSecurity::SaveImages(DB *df,const char *JPGKEY)
 {
-
     if(jpgkey==0) {
         jpgkey = app->CreateNewJpgFile();
     }
-
-
     CString fldName;
-
 	int flag,TotalCameras = pView->TotalCameras;
     for(int i=1; i<=TotalCameras; i++) {
         fldName.Format("jpg%2.2i",i+10);
@@ -792,8 +698,6 @@ void CSecurity::SaveImages(DB *df,const char *JPGKEY)
 
     ltodb(jpgkey, df, JPGKEY);
     flag = pView->CopyPhotoToServer(jpgkey);
-
-	
 	jpgkey = 0;
 }
 
@@ -871,20 +775,16 @@ LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
     if(m_jpg[i].Load( file )) {
          InvalidateRect( PreviewRect[i] );
     }
-    
-    m_progress.SetPos(i);
-    log_proceeding(" ->End Photo Processed");
-    
+    m_progress.SetPos(i);    
     return 0;
 }
 
 void CSecurity::OnPaint() 
 {
-    CPaintDC dc(this); // device context for painting
+    CPaintDC dc(this);
     for(int i=1; i<=5;i++) {
 		CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
-
 		m_jpg[i].Draw(&dc,PreviewRect[i].left,PreviewRect[i].top,
                    PreviewRect[i].Width(),PreviewRect[i].Height());
     }
@@ -892,116 +792,37 @@ void CSecurity::OnPaint()
 
 void CSecurity::OnBR1Close() 
 {
-	if(isManualSetting() && UserPasswordLoginAccepted(df, 9, "Manual Close Back Barrier (Barrier 1)") == 0)
-	{
-		return;
-	}
-	GetDlgItem(IDC_BR1Close)->ShowWindow(SW_HIDE);
-	m_br1.CloseBarrier();
 }
 
 void CSecurity::OnBR1Open() 
 {
-	if(isManualSetting() && !isAutoMode && UserPasswordLoginAccepted(df, 9, "Manual Open Back Barrier (Barrier 1)") == 0)
-	{
-		isAutoMode = FALSE;
-		return;
-	}
-	GetDlgItem(IDC_BR1Open)->ShowWindow(SW_HIDE);
-	m_br1.OpenBarrier();
-	isAutoMode = FALSE;
-	if(weighbridge.Boolean(GetDbFieldNo(&weighbridge, "SET_MANUAL_FLAG")))
-	{
-		ManualOpenBackBarrier = TRUE;	
-	}
 }
 
 void CSecurity::OnBR2Close() 
 {
-	if(isManualSetting() && UserPasswordLoginAccepted(df, 9, "Manual Close Front Barrier (Barrier 2)") == 0)
-	{
-		return;
-	}
-	GetDlgItem(IDC_BR2Close)->ShowWindow(SW_HIDE);
-	m_br2.CloseBarrier();	
 }
 
 void CSecurity::OnBR2Open() 
 {
-	if(isManualSetting() && !isAutoMode && UserPasswordLoginAccepted(df, 9, "Manual Open Front Barrier (Barrier 2)") == 0)
-	{
-		isAutoMode = FALSE;
-		return;
-	}
-	GetDlgItem(IDC_BR2Open)->ShowWindow(SW_HIDE);
-	m_br2.OpenBarrier();
-	isAutoMode = FALSE;
-	if(weighbridge.Boolean(GetDbFieldNo(&weighbridge, "SET_MANUAL_FLAG")))
-	{
-		ManualOpenFrontBarrier = TRUE;	
-	}
 }
 
 BOOL CSecurity::ManualModeActive()
 {
-	if(ManualOpenBackBarrier)
-	{
-		OnBR2Open();
-		iBarrier = 2;
-	}
-	else if(ManualOpenFrontBarrier)
-	{
-		OnBR1Open();
-		iBarrier = 1;
-	}
-	else
-	{
-		return FALSE;
-	}
-	ManualOpenBackBarrier = FALSE;
-	ManualOpenFrontBarrier = FALSE;
-
-	iCounter = 100;
-	m_progress.SetRange32(1,100);
-	m_progress.SetPos(iCounter);
-	SetTimer(9001,250,NULL);
 	return TRUE;
 }
 
 void CSecurity::OnOpenBarrier(UINT ID)
 {
-	isAutoMode = TRUE;
-	if(ManualModeActive()) {
-		isAutoMode = FALSE;
-		return;
-	}
-	if(ID==IDOK) {
-		OnBR2Open();
-		iBarrier = 2;
-	}
-	else {
-		OnBR1Open();
-		iBarrier = 1;
-	}
-
-	iCounter = 100;
-	m_progress.SetRange32(1,100);
-	m_progress.SetPos(iCounter);
-	SetTimer(9001,250,NULL);
-
 }
 
 void CSecurity::OnButton4() 
 {
 	CString str;
 	int level = 9;
-
 	str.Format("Manual input vehicle number.");
 	int flag = UserPasswordLoginAccepted(df,level,str);
 	if(flag==0) return;
-
 	CEdit *p = (CEdit *) GetDlgItem(IDC_L1);
-
 	p->SetReadOnly(FALSE);
 	p->SetFocus();
 	isLPR_OK = FALSE;
@@ -1011,13 +832,10 @@ void CSecurity::OnButton6()
 {
 	CString str;
 	int level = 9;
-
 	str.Format("Manual input container number.");
 	int flag = UserPasswordLoginAccepted(df,level,str);
 	if(flag==0) return;
-
 	CEdit *p = (CEdit *) GetDlgItem(IDC_L2);
-
 	p->SetReadOnly(FALSE);
 	p->SetFocus();
 	isCNR_OK = FALSE;
@@ -1025,24 +843,13 @@ void CSecurity::OnButton6()
 
 void CSecurity::OnButton8() 
 {
-/*
-	CString str;
-	int level = 9;
-	
-	str.Format("Manual input container number.");
-	int flag = UserPasswordLoginAccepted(df,level,str);
-	if(flag==0) return;*/
-	
 	CEdit *r = (CEdit *) GetDlgItem(IDC_L3);
-	
 	r->SetReadOnly(FALSE);
 	r->SetFocus();
-
 }
 void CSecurity::OnPic01()
 {
     CShowJpg h1(IDD_SHOW_JPG);
-
     h1.df = NULL;
     h1.jpgName = pView->strPhoto[1];
     h1.DoModal();
@@ -1060,7 +867,6 @@ void CSecurity::OnPic02()
 void CSecurity::OnPic03()
 {
     CShowJpg h1(IDD_SHOW_JPG);
-
     h1.df = NULL;
     h1.jpgName = pView->strPhoto[3];
     h1.DoModal();
@@ -1078,6 +884,5 @@ BOOL CSecurity::PreTranslateMessage(MSG* pMsg)
              return TRUE;
          }
 	} 
-	
 	return CFM20Dlg::PreTranslateMessage(pMsg);
 }

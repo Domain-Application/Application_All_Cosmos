@@ -112,16 +112,6 @@ void CPMWeighing::OnTimer(UINT nIDEvent)
 
 void CPMWeighing::OnOK() 
 {
-	CString message = IsBlacklistedDriver(df,df->dat[Pm_DRIVER1]);  //brian//check blacklist for driver1 and driver2//20251223
-	if(!isblank(message) && UserPasswordLoginAccepted(df, 9, message) == 0)
-	{
-		return;
-	}
-	message = IsBlacklistedDriver(df,df->dat[Pm_DRIVER2]);
-	if(!isblank(message) && UserPasswordLoginAccepted(df, 9, message) == 0)
-	{
-		return;
-	}
     int key = GetCheckedRadioButton(IDC_RADIO1,IDC_RADIO2);
 	push_plateno2.Format("");
     if(key==IDC_RADIO1) {

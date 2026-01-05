@@ -18,7 +18,7 @@ public:
      CIt1(CWnd* pParent = NULL);   // standard constructor
 	 virtual void LoadImages();     
 	 int iType;
-     CString m_contno,m_vehicle,m_tt,m_bin;
+     CString m_contno,m_vehicle,m_tt;
 
 // Dialog Data
      //{{AFX_DATA(CIt1)

@@ -52,42 +52,6 @@ END_MESSAGE_MAP()
  
 void CIt1::OnOK()
 {
-    //FIXME: revert ASAP
-#ifdef _DEBUG 
-
-#else
-	   if( BarrierStatus(1) ) { 
-		   MessageBox("Cannot weighing!!!","Barrier 1 still open", MB_ICONSTOP);
-		   return;
-	   }
-	   
-	   if( BarrierStatus(2) ) {
-		   MessageBox("Cannot weighing!!!","Barrier 2 still open", MB_ICONSTOP);
-		   return;
-	}
-#endif
-	CString message = IsBlacklistedDriver(df,df->dat[DRIVER]); //brian//check blacklist for driver1 and driver2//20251223
-	if(!isblank(message) && UserPasswordLoginAccepted(df, 9, message) == 0)
-	{
-		return;
-	}
-	CString binno=df->dat[BIN];
-	binno.TrimRight();
-	if(binno.GetLength()>0)
-	{
-		if (OnBin_WeightIn_Info(df,df->dat[BIN])==FALSE)//20251229
-		{
-			return;
-		}
-		else
-		{
-			CString strsql;
-			strsql.Format("UPDATE [BIN] SET INYARD = 1, INYARD_TIME = GETDATE() where CODE='%s'",df->dat[BIN]);
-			RunSql(strsql);
-		}
-	}
-	
-
 	ReplaceRecord();
     if (IsSaveConditionOk(df)==0) return;
 
@@ -159,50 +123,16 @@ void CIt1::OnTimer(UINT nIDEvent)
     CFEdit::OnTimer(nIDEvent);
 }
 
-BOOL IsPrimeMoverValid(CString vehicle)
-{
-    CString input;
-    input.Format("select DATEDIFF(HOUR, TIME, GETDATE()) as output from lorry where lorry = '%s' and IS_SHUNTING_LORRY = 1 ", vehicle);
-    if(SqlInt(input) >= 24)
-    {
-        input.Format("Lorry %s weighted for %d hours. Please weight using Prime Mover. Press yes to continue or no to cancel", vehicle, SqlInt(input));
-        if(MessageBox(NULL, input, "Question", MB_ICONQUESTION | MB_YESNO)==IDNO) 
-        {
-            return FALSE;
-        }
-    }
-    return TRUE;
-}
-
 void CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
 {
-    if(!IsPrimeMoverValid(m_vehicle))
-    {
-        return;
-    }
     lsetblank(df);
 
 	(*df->e->start)(df);
 
 	m_contno.TrimRight();
-	m_bin.TrimRight();
 	if(m_contno.GetLength()==11) {
 		lset(df->dat[LORRY], m_contno);
         lset(df->dat[PM1NO], m_vehicle);
-        //int flag = CheckContainerDigit( m_contno );
-        //if(flag != TRUE) return;
-        // if(!isblank(df->dat[I1]))
-        // {
-        //     // OnRadio3();
-        //     AfxMessageBox("1st Prime Mover not found. Please assign via Prime Mover Out before proceeding");
-        //     return;
-        // }
-        // df->ReOpen();
-	}
-	else if(m_bin.GetLength()>0)
-	{
-		lset(df->dat[LORRY], m_vehicle);
-		lset(df->dat[BIN], m_bin);		
 	}
 	else {
 		lset(df->dat[LORRY], m_vehicle);
@@ -231,35 +161,6 @@ void CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
 		lset(df->dat[LORRY], m_contno);
         lset(df->dat[PM1NO], m_vehicle);
         long x1 = qd(df->dat[PM1NO], &lorry);
-        if(x1) {
-			//2025-12-20 DON'T PUT FIRST
-            //long wt = lorry.val(Lo_TARE);
-            //ltodb(wt, df, PM1WT);
-
-            //int i = lorry.lval(Lo_INDICATOR);
-            //lset(df, "I3", strIndicator(i) );
-
-            //lset(df->dat[PM1TIME], lorry.dat[Lo_TIME]);
-            //lset(df->dat[USER3], user.dat[1]);
-        }
-	}
-	else if (m_bin.GetLength()>0)
-	{
-		lset(df->dat[LORRY], m_vehicle);		//must blank 
-		lset(df->dat[BIN], m_bin);
-
-		/*long x1 = qd(df->dat[PM1NO], &lorry);
-        if(x1) {
-			//2025-12-20 DON'T PUT FIRST
-            long wt = lorry.val(Lo_TARE);
-            ltodb(wt, df, PM1WT);
-			
-            int i = lorry.lval(Lo_INDICATOR);
-            lset(df, "I3", strIndicator(i) );
-			
-            lset(df->dat[PM1TIME], lorry.dat[Lo_TIME]);
-            lset(df->dat[USER3], user.dat[1]);
-        }*/
 	}
 	else {
 		lset(df->dat[LORRY], m_vehicle);
@@ -291,7 +192,6 @@ void CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
     CIt1 h;
 	h.m_contno = m_contno;
 	h.m_vehicle = m_vehicle;
-	h.m_bin = m_bin;
     h.df = df;
     h.iType = type;
 
@@ -303,14 +203,9 @@ void CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
     ltodb(CNR_Status, df,  GetDbFieldNo(df, "IN_CNR_SUCCESS"));
 	df->SetCurrentTime(TIMEIN);
 	df->SetCurrentTime(Date);
-
     df->AddNew();
-
-    
 	IsZeroWt = FALSE;
 	OnOpenBarrier(ID);
-
-
 }
 
 
@@ -338,8 +233,6 @@ void CIt1::LoadImages()
          if(!previewWnd) continue;
          previewWnd->GetWindowRect(PreviewRect[i]);
          ScreenToClient(&PreviewRect[i]);
-
-
 		 s = pView->strPhoto[i];
          if(m_jpg[i].Load(s)) {
              InvalidateRect( PreviewRect[i] );
@@ -350,7 +243,6 @@ void CIt1::LoadImages()
 
 void CIt1::OnSnapshots() 
 {
-
 	int TotalCameras = pView->TotalCameras;
     for(int i=1; i<=TotalCameras; i++) {
 
@@ -377,51 +269,5 @@ void CIt1::OnCancel()
 
 BOOL OnBin_WeightIn_Info(DB *df,CString binno) //brian//28-12-2925
 {
-
-	CString strsql,str;
-	//binno=df->dat[BIN];
-	binno.TrimRight();
-	strsql.Format("SELECT INYARD from BIN where CODE='%s'",binno);
-	if(SqlValue(strsql)==0) //BIN NOT IN YARD WILL CREATE BINDAT
-	{	
-					
-		DB adoTmp;
-		strsql.Format("SELECT * from BIN where CODE='%s'",binno);
-		ado(&adoTmp, "", NULL, strsql);
-		long xrec = adoTmp.t->sumrecord;
-
-		if (xrec<=0) {
-		AfxMessageBox("Bin No Not Found in Bin Master, Please create new bin"); 	//brian//alert user only, will not blocked save, will check existed at ticket entry '1/2'
-		dclose(&adoTmp);
-		return FALSE;
-		}
-		else
-		{
-			for(long rec=1; rec<=1; rec++) //start insert record
-			{
-				adoTmp.read(rec);
-				lsetblank(&bindat);
-				lset(bindat.dat[Bin_BINNO],adoTmp.dat[1]);
-				lset(bindat.dat[Bin_DATE],df->dat[Date]);
-				FindAddInfoTicketNo(df,1);
-				lset(bindat.dat[Bin_TICKET],df->dat[1]);
-				lset(bindat.dat[Bin_LORRYIN],df->dat[LORRY]);
-				lset(bindat.dat[Bin_LORRYIN_TIME],df->dat[TIMEIN]);
-				lset(bindat.dat[Bin_INDRIVER],df->dat[DRIVER]);
-				ltodb(1,&bindat,Bin_INYARD_FLAG);
-				FindAddInfoTicketNo(&bindat,1);
-				bindat.AddNew();
-			}
-			dclose(&adoTmp);
-			return TRUE;
-		}
-	}
-	else //BIN IN YARD
-	{
-		str.Format("Bin No %s is still in yard. Please redo weighing and empty the Bin No.\r\n Bin No should only be entered when the lorry is carrying a bin.", binno);
-		AfxMessageBox(str);
-		return FALSE;
-
-	}
-
+	return TRUE;
 }

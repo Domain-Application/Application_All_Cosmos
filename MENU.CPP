@@ -33,8 +33,6 @@ DB pmtdat(IDD_PMTDAT,7),pm1(IDD_PMTDAT,7),pm2(IDD_PMTDAT,7);
 DB weighbridge(IDD_WEIGHBRIDGE);
 DB weighbridge2(IDD_WEIGHBRIDGE);
 DB first(IDD_WB);
-BOOL requireAutoOpenFrontBarrier = FALSE;
-DB bin_list, bindat;
 DB lorry(IDD_LORRY);
 
 /////////////////////////////////////////////////////////////////////////////
