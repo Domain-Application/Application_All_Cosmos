@@ -6,7 +6,6 @@
 #define IDUPDATE                        3
 #define IDD_TT  534
 #define IDSHOWINV                       9
-#define IDD_MENU_FORM                   100
 #define ID_INDICATOR_DATE               102
 #define ID_INDICATOR_TIME               103
 #define IDR_MENUTYPE                    129

@@ -17,7 +17,52 @@
 #include <Tan.h>       // main symbols
 //{{AFX_INCLUDES()
 #include "msflexgrid.h"
+#include "mycctv.h"
 //}}AFX_INCLUDES
+extern DB despatch_ticket_info, receive_ticket_info,bin_list;
+extern CString IsBlacklistedDriver(DB *df,CString drivercode);
+extern BOOL DeletePic(const char *file);
+extern BOOL requireAutoOpenFrontBarrier;
+extern BOOL isWBDualMode();
+extern BOOL isManualSetting();
+extern CString push_plateno1,push_plateno2;
+extern BOOL isShuntingLorry(CString lorryNo);
+extern DB  reason,bin;
+extern DB  weighbrige,weighbrige2;
+extern void init_weighbrige(DB *df);
+extern DB  unit,camera;
+extern DB  tt,pmtdat,pm1,pm2,bindat;
+extern DB  despatch;
+extern DB  lorry,pm1no,pm2no,first;
+extern DB  dscr,packing,transp,warehouse,weighbridge,weighbridge2;
+extern void log_proceeding(const char *msg);
+extern int CheckManualOpenBarrier(int sq,CListBox  &m_list);
+extern void init_weighbridge(DB *df);
+extern void init_pmtdat(DB *df);
+extern void SetADAM_IPAdd();
+extern int ADAM_flag,ADAMSimulator,last_show_zero;
+extern BYTE DiData[500],DoData[500];
+extern char szIPAddress[99];
+extern BYTE adamData[1280];
+extern int readADAMData(BYTE *inbuff,int function,int step=0);
+extern int ADAMRequest(const char *server_name,char *command, BYTE *byData);
+extern int adamtcp_ReadCoil(char *szIPAddress, WORD wDeviceID, WORD wStartAddress, WORD wCount, BYTE *byData);
+extern int adamtcp_WriteCoil(char *szIPAddress, WORD wDeviceID, WORD wStartAddress, WORD wCount, BYTE *byData);
+extern BOOL ILoopStatus(int no);
+extern BOOL BarrierStatus(int no);
+extern void WriteCoil(int Id,BOOL OnOFF);
+#define BarrierIsOpen 1
+#define BarrierIsClose 0
+extern void SetWindowLocation(CDialog *p);
+extern CString strIndicator(int current_indicator);
+extern int ClientRequest(const char *server_name,char *command,CString &errmsg);
+extern int current_indicator,program4;
+extern long tcpWeight;
+extern int STCR, program4;
+enum bindat {Bin_REFNO=1,Bin_BINNO,Bin_DATE,Bin_TICKET,Bin_LORRYIN,Bin_LORRYIN_TIME,Bin_INDRIVER,Bin_LORRYOUT,Bin_LORRYOUT_TIME,Bin_OUTDRIVER,Bin_INYARD_FLAG};
+enum bin{B_CODE=1,B_NAME,B_REMARKS,B_INYARD,B_INYARDTIME,B_OUTYARDTIME,B_SAVECOUNTER};
+extern BOOL OnBin_WeightIn_Info(DB *df,CString binno);
+extern BOOL OnBin_WeightOut_Info(DB *df,CString m_vehicle);
 extern DB  unit;
 extern DB  tt;
 extern DB  wbdata, prdata, dbdata, despatch;
@@ -100,7 +145,18 @@ enum wb {TICKET=1,LORRY,Date,STATUS,TT,CUST,PT,DRIVER,TOLERANT,TRANSP,WAREHOUSE,
                SEALFR,SEALTO,LOTNO,TIMEIN,TIMEOUT,
                REM,PM1NO,PM1TIME,PM1WT,PM2NO,PM2TIME,PM2WT,
                I1,I2,I3,I4,
-               W1,W2,Z1,Z2,FWNO,USER1,USER2,USER3,USER4,USER5,USER6};
+               W1,W2,Z1,Z2,FWNO,USER1,USER2,USER3,USER4,USER5,USER6,
+	           REFNO,JPGKEY1,JPGKEY2,IN_LPR,IN_CNR,OUT_LPR,OUT_CNR,BIN};
+enum WEIGHBRIDGE{   weighbridge_WEIGHBRIDGE=1,weighbridge_NAME,
+    weighbridge_IP, weighbridge_COMPUTER_NAME,
+	weighbridge_BR1,weighbridge_LOOP1,weighbridge_BR1_UP,weighbridge_BR1_DOWN,weighbridge_BR1DISABLED,
+	weighbridge_BR2,weighbridge_LOOP2,weighbridge_BR2_UP,weighbridge_BR2_DOWN,weighbridge_BR2DISABLED,
+    weighbridge_ALT,weighbridge_MOB1,  weighbridge_MOB2,  
+	weighbridge_WEIGHT,  weighbridge_RUNNING,
+    weighbridge_REC_STATUS,  weighbridge_NEWUSER, weighbridge_NEWTIME,
+    weighbridge_MODIFYUSER,  weighbridge_MODIFYTIME,  weighbridge_Print_Counter,   weighbridge_PKKEY};
+
+enum pmtdat {Pm_REFNO=1,Pm_PMNO,Pm_DATE,Pm_TICKET,Pm_TIMEIN,Pm_WEIGHT,Pm_DIRECTION,Pm_REMARKS,Pm_W1,Pm_Z1,Pm_JPGKEY1,Pm_DRIVER1,Pm_DRIVER2,Pm_TRANSP,Pm_IS_SHUNTING,Pm_IS_RORO};
 
 #define TDATE Date
 #define ACCODE CUST
@@ -119,7 +175,7 @@ enum profile {Pro_CODE=1,Pro_ADD1,Pro_ADD2,Pro_ADD3,Pro_WtServer,
               Pro_STABLE,Pro_ZERO,Pro_SW,Pro_DRIVER};
 enum logerr {LGR_DATE=1,LGR_CASHIER,LGR_ACCESS,LGR_TICKET,LGR_TIME,LGR_PASS_TYPE,LGR_PROGRAM};
 enum lorry {Lo_LORRY=1,Lo_DRIVER1,Lo_DRIVER2,Lo_TRANSP,
-            Lo_TIME,Lo_TARE,Lo_REMARKS,Lo_USER};
+            Lo_TIME,Lo_TARE,Lo_REMARKS,Lo_USER,Lo_LPRNO, Lo_INDICATOR};
 enum packing {Pk_PACKING=1,Pk_DES,Pk_NETWT,Pk_PW,Pk_WEIGHT,Pk_REMARKS};
 enum logo {Logo_CODE=1,Logo_NAME,Logo_ADD1,Logo_ADD2,Logo_ADD3,Logo_ADD4,
            Logo_DATE,Logo_DATE1,Logo_DATE2,Logo_TIME1,Logo_TIME2,
@@ -130,7 +186,7 @@ enum logo {Logo_CODE=1,Logo_NAME,Logo_ADD1,Logo_ADD2,Logo_ADD3,Logo_ADD4,
 // See menu.cpp for the implementation of this class
 //
 
-class CMenuApp : public CMyApp
+class CMenuApp : public CMyCctvApp
 {
 public:
 	CMenuApp();
@@ -142,6 +198,14 @@ public:
     virtual int SubProgram(int key);
     virtual BOOL RptResetFiles(const CString m_CrystalReportName,const CString repname,CString &newname);
     virtual CString ConfirmCrystalTableFile(char *FieldName,CString m_CrystalReportName);
+    virtual int  ExitInstance();
+    virtual void SetTitleColor();
+    virtual int SetAlarmChannel(int iCamera);
+    virtual int OnGetPlateNo(int id,CString &plateno,int option=0xff,const char *picFolder="");
+    virtual void LprDetected(const char *no,int CameraIndex);
+    virtual void LprLog(const char *no,int CameraIndex,const char *platePhoto,int mode);
+    virtual void AddLog(int iDeviceIndex, int iLogType, const char* format, ...);
+    virtual BOOL IsHasSingleTask();
 };
 /////////////////////////////////////////////////////////////////////////////
 

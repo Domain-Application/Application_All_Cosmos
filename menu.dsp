@@ -97,7 +97,19 @@ SOURCE=.\ACCODE.CPP
 # End Source File
 # Begin Source File
 
+SOURCE=.\ADAM.CPP
+# End Source File
+# Begin Source File
+
+SOURCE=.\BARRIER.CPP
+# End Source File
+# Begin Source File
+
 SOURCE=.\Category.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ChangeWeighingType.cpp
 # End Source File
 # Begin Source File
 
@@ -114,6 +126,14 @@ SOURCE=.\FastSearch.cpp
 # Begin Source File
 
 SOURCE=.\INIT_WB.CPP
+# End Source File
+# Begin Source File
+
+SOURCE=.\IT1.CPP
+# End Source File
+# Begin Source File
+
+SOURCE=.\IT2.CPP
 # End Source File
 # Begin Source File
 
@@ -149,11 +169,23 @@ SOURCE=.\MENUVIEW.CPP
 # End Source File
 # Begin Source File
 
+SOURCE=.\NVIEW.CPP
+# End Source File
+# Begin Source File
+
 SOURCE=.\PACKING.CPP
 # End Source File
 # Begin Source File
 
 SOURCE=.\PASS.CPP
+# End Source File
+# Begin Source File
+
+SOURCE=.\PMTDAT.CPP
+# End Source File
+# Begin Source File
+
+SOURCE=.\PMWeighing.cpp
 # End Source File
 # Begin Source File
 
@@ -165,8 +197,20 @@ SOURCE=.\ResetPassword.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\SECURITY.CPP
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
+# End Source File
+# Begin Source File
+
+SOURCE=.\tcpServer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\TriggerLPR.cpp
 # End Source File
 # Begin Source File
 
@@ -175,6 +219,10 @@ SOURCE=.\Wb.cpp
 # Begin Source File
 
 SOURCE=.\WBDATA.CPP
+# End Source File
+# Begin Source File
+
+SOURCE=.\weighbridge.CPP
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -191,6 +239,10 @@ SOURCE=.\DateTimePeriod.h
 # Begin Source File
 
 SOURCE=.\Export4ASCII.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\MENU.H
 # End Source File
 # End Group
 # Begin Group "Resource Files"
@@ -218,7 +270,23 @@ SOURCE=.\res\hotbar.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\ico00001.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ico00002.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\ico00003.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\RES\icon3.ico
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\icon7.ico
 # End Source File
 # Begin Source File
 
@@ -265,13 +333,13 @@ SOURCE=.\ReadMe.txt
 # 	2:21:DefaultSinkHeaderFile:mdctext.h
 # 	2:16:DefaultSinkClass:CMdcText
 # End Section
-# Section menu : {648A5600-2C6E-101B-82B6-000000000014}
-# 	2:21:DefaultSinkHeaderFile:mscomm.h
-# 	2:16:DefaultSinkClass:CMSComm
-# End Section
 # Section menu : {C932BA85-4374-101B-A56C-00AA003668DC}
 # 	2:21:DefaultSinkHeaderFile:msmask1.h
 # 	2:16:DefaultSinkClass:CMSMask
+# End Section
+# Section menu : {648A5600-2C6E-101B-82B6-000000000014}
+# 	2:21:DefaultSinkHeaderFile:mscomm.h
+# 	2:16:DefaultSinkClass:CMSComm
 # End Section
 # Section menu : {E6E17E90-DF38-11CF-8E74-00A0C90F26F8}
 # 	2:5:Class:CMSComm
@@ -282,6 +350,11 @@ SOURCE=.\ReadMe.txt
 # 	2:5:Class:CRowCursor
 # 	2:10:HeaderFile:rowcursor.h
 # 	2:8:ImplFile:rowcursor.cpp
+# End Section
+# Section menu : {04598FC4-866C-11CF-AB7C-00AA00C08FCF}
+# 	2:5:Class:CCommandButton
+# 	2:10:HeaderFile:commandbutton.h
+# 	2:8:ImplFile:commandbutton.cpp
 # End Section
 # Section menu : {8BD21D13-EC42-11CE-9E0D-00AA006002F3}
 # 	2:5:Class:CMdcText
@@ -297,22 +370,17 @@ SOURCE=.\ReadMe.txt
 # 	2:21:DefaultSinkHeaderFile:labelcontrol1.h
 # 	2:16:DefaultSinkClass:CLabelControl
 # End Section
-# Section menu : {04598FC4-866C-11CF-AB7C-00AA00C08FCF}
-# 	2:5:Class:CCommandButton
-# 	2:10:HeaderFile:commandbutton.h
-# 	2:8:ImplFile:commandbutton.cpp
-# End Section
-# Section menu : {5F4DF280-531B-11CF-91F6-C2863C385E30}
-# 	2:5:Class:CMSFlexGrid
-# 	2:10:HeaderFile:msflexgrid.h
-# 	2:8:ImplFile:msflexgrid.cpp
-# End Section
 # Section menu : {72ADFD7B-2C39-11D0-9903-00A0C91BC942}
 # 	1:17:ID_INDICATOR_TIME:103
 # 	1:17:ID_INDICATOR_DATE:102
 # 	2:2:BH:
 # 	2:17:ID_INDICATOR_TIME:ID_INDICATOR_TIME
 # 	2:17:ID_INDICATOR_DATE:ID_INDICATOR_DATE
+# End Section
+# Section menu : {5F4DF280-531B-11CF-91F6-C2863C385E30}
+# 	2:5:Class:CMSFlexGrid
+# 	2:10:HeaderFile:msflexgrid.h
+# 	2:8:ImplFile:msflexgrid.cpp
 # End Section
 # Section menu : {6262D3A0-531B-11CF-91F6-C2863C385E30}
 # 	2:21:DefaultSinkHeaderFile:msflexgrid.h
