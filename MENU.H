@@ -19,19 +19,22 @@
 #include "msflexgrid.h"
 #include "mycctv.h"
 //}}AFX_INCLUDES
+extern DB container;
+extern DB trailer;
+extern int SensorStatus(int no);
 extern DB despatch_ticket_info, receive_ticket_info;
 extern BOOL DeletePic(const char *file);
 extern BOOL isWBDualMode();
 extern BOOL isManualSetting();
 extern CString push_plateno1,push_plateno2;
 extern DB  reason,bin;
-extern DB  weighbrige,weighbrige2;
+extern DB  weighbrige;
 extern void init_weighbrige(DB *df);
 extern DB  unit,camera;
 extern DB  tt,pmtdat,pm1,pm2,bindat;
 extern DB  despatch;
 extern DB  lorry,pm1no,pm2no,first;
-extern DB  dscr,packing,transp,warehouse,weighbridge,weighbridge2;
+extern DB  dscr,packing,transp,warehouse,weighbridge;
 extern void log_proceeding(const char *msg);
 extern int CheckManualOpenBarrier(int sq,CListBox  &m_list);
 extern void init_weighbridge(DB *df);
@@ -141,13 +144,13 @@ enum wb {TICKET=1,LORRY,Date,STATUS,TT,CUST,PT,DRIVER,TOLERANT,TRANSP,WAREHOUSE,
                REM,PM1NO,PM1TIME,PM1WT,PM2NO,PM2TIME,PM2WT,
                I1,I2,I3,I4,
                W1,W2,Z1,Z2,FWNO,USER1,USER2,USER3,USER4,USER5,USER6,
-	           REFNO,JPGKEY1,JPGKEY2,IN_LPR,IN_CNR,OUT_LPR,OUT_CNR,BIN};
+	           REFNO,JPGKEY1,JPGKEY2,IN_LPR,IN_CNR,OUT_LPR,OUT_CNR,BIN, WB_Container, WB_Trailer};
 enum WEIGHBRIDGE{   weighbridge_WEIGHBRIDGE=1,weighbridge_NAME,
     weighbridge_IP, weighbridge_COMPUTER_NAME,
 	weighbridge_BR1,weighbridge_LOOP1,weighbridge_BR1_UP,weighbridge_BR1_DOWN,weighbridge_BR1DISABLED,
 	weighbridge_BR2,weighbridge_LOOP2,weighbridge_BR2_UP,weighbridge_BR2_DOWN,weighbridge_BR2DISABLED,
     weighbridge_ALT,weighbridge_MOB1,  weighbridge_MOB2,  
-	weighbridge_WEIGHT,  weighbridge_RUNNING,
+	weighbridge_WEIGHT,  weighbridge_RUNNING, weighbridge_Manual_Mode, weighbridge_ANPR_Port, weighbridge_Set_Manual_Flag, weighbridge_Sensor1, weighbridge_Sensor2, weighbridge_ANPR_Port2,
     weighbridge_REC_STATUS,  weighbridge_NEWUSER, weighbridge_NEWTIME,
     weighbridge_MODIFYUSER,  weighbridge_MODIFYTIME,  weighbridge_Print_Counter,   weighbridge_PKKEY};
 

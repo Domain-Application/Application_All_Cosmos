@@ -37,37 +37,29 @@ CMainFrame::CMainFrame()
 {
     m_System.Format("%s Weighing System Ver 1.00", title);
     app->m_auto_purge_logfiles_after_days = 30;
+    bCommOpen = TRUE;
 }
 
 void CMainFrame::OnOpenOtherFiles()
 {
-    CString WeightServer = profile.dat[Pro_WtServer];
-    WeightServer.TrimRight();
-
-    if(WeightServer.GetLength()==0) {
-        bCommOpen = TRUE;
-
-        HWND hWnd = GetSafeHwnd();
-        BOOL bOpen = SetCommThread(hWnd,FALSE);
-        if(bOpen==FALSE) {
-        }
-    }
-    else {
-        UINT flag = GetCurrentDirectory(1000,lpBuffer);
-        if(flag) {
-            if(!WeightServer.CompareNoCase(app->m_strComputerName)) {
-                char szPort[20];
-                CString errmsg;
-                strcpy(szPort,"W1");
-                flag = ClientRequest(WeightServer, szPort , errmsg);
-                    if(flag==-1) {
-                    CString lpFile = lpBuffer;
-                    lpFile += "\\wmtcp.exe";
-                    HINSTANCE flag = ShellExecute( NULL, "OPEN", lpFile, NULL, NULL, SW_SHOW);
-                }
-            }
-        }
-    }
+    #ifdef _DEBUG
+    ADAMSimulator = 1;
+    #else
+    ADAMSimulator = 2;
+    #endif
+    if (app->m_strComputerName.CompareNoCase("domain-chan") == 0 ||
+		app->m_strComputerName.CompareNoCase("ooi") == 0 ||
+		app->m_strComputerName.CompareNoCase("kelvin") == 0 ||
+		app->m_strComputerName.CompareNoCase("brian-pc") == 0 ||
+		app->m_strComputerName.CompareNoCase("torry") == 0
+		)
+	{
+		ADAMSimulator = 1;
+	}
+    ADAM_flag = 0;
+    current_indicator = program4;
+    HWND hWnd = GetSafeHwnd();
+    BOOL bOpen = SetCommThread(hWnd,FALSE);
 }
 
 void CMainFrame::OnClose()

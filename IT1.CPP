@@ -123,7 +123,7 @@ void CIt1::OnTimer(UINT nIDEvent)
     CFEdit::OnTimer(nIDEvent);
 }
 
-void CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
+BOOL CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
 {
     lsetblank(df);
 
@@ -131,34 +131,23 @@ void CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
 
 	m_contno.TrimRight();
 	if(m_contno.GetLength()==11) {
-		lset(df->dat[LORRY], m_contno);
+		lset(df->dat[WB_Container], m_contno);
+		lset(df->dat[LORRY], m_vehicle);
         lset(df->dat[PM1NO], m_vehicle);
 	}
 	else {
 		lset(df->dat[LORRY], m_vehicle);
         lset(df->dat[PM1NO], "");			//must blank 
 	}
-	//OnSearch_UpdatePM1Information();
-	CString strsql;
-	strsql.Format("SELECT IS_RORO FROM PMTDAT WHERE PMNO='%s'",df->dat[LORRY]); 
-	if(SqlValue(strsql)==1)
-	{	
-		long xrec = df->Search(df->dat[BIN] , BIN, TRUE );	
-		if(xrec) {
-			OnSecond(LPR_Status, CNR_Status);
-			return;
-		}
-	}
-
 	long xrec = df->Search(df->dat[LORRY] , LORRY, TRUE );
 	if(xrec) {
-		OnSecond(LPR_Status, CNR_Status);
-		return;
+		return OnSecond(LPR_Status, CNR_Status);
 	}
 	
 	
 	if(m_contno.GetLength()==11) {
-		lset(df->dat[LORRY], m_contno);
+		lset(df->dat[WB_Container], m_contno);
+		lset(df->dat[LORRY], m_vehicle);
         lset(df->dat[PM1NO], m_vehicle);
         long x1 = qd(df->dat[PM1NO], &lorry);
 	}
@@ -196,7 +185,7 @@ void CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
     h.iType = type;
 
     UINT ID = h.DoModal();
-	if(ID==IDCANCEL) return;
+	if(ID==IDCANCEL) return FALSE;
 
 	SaveImages(df,"JPGKEY1");
     ltodb(LPR_Status, df,  GetDbFieldNo(df, "IN_LPR_SUCCESS"));
@@ -205,27 +194,35 @@ void CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
 	df->SetCurrentTime(Date);
     df->AddNew();
 	IsZeroWt = FALSE;
-	OnOpenBarrier(ID);
+	return TRUE;
 }
 
 
 void CSecurity::OnRadio1(BOOL LPR_Status, BOOL CNR_Status) 
 {
-    OnFirstWt( 1, LPR_Status, CNR_Status);
+    BOOL is_Done = OnFirstWt( 1, LPR_Status, CNR_Status);
     isLPR_OK = TRUE;
     isCNR_OK = TRUE;
+	if(is_Done)
+	{
+		CFM20Dlg::OnOK();
+	}
 }
 
 void CSecurity::OnRadio2(BOOL LPR_Status, BOOL CNR_Status) 
 {
-    OnFirstWt( 2, LPR_Status, CNR_Status);
+    BOOL is_Done = OnFirstWt( 2, LPR_Status, CNR_Status);
     isLPR_OK = TRUE;
     isCNR_OK = TRUE;
+	if(is_Done)
+	{
+		CFM20Dlg::OnOK();
+	}
 }
 
 void CIt1::LoadImages()
 {
-     int TotalCameras = 3;
+     int TotalCameras = 4;
 	 CString s;
 
      for(int i=1; i<=TotalCameras; i++) {

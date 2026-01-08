@@ -11,6 +11,7 @@
 #include <jpgpicture.h>
 #include "Barrier.h"
 #include "FM20Dlg.h"
+#include "Sensor.h"
 
 #define WM_PHOTO_PROCESSED (WM_USER + 500)
 
@@ -31,8 +32,8 @@ public:
 	CSecurity(CWnd* pParent = NULL);   // standard constructor
 	void SaveImages(DB *df,const char *JPGKEY);
     void OnUpdateLorry();
-    void OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status);
-    void OnSecond(BOOL LPR_Status, BOOL CNR_Status);
+    BOOL OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status);
+    BOOL OnSecond(BOOL LPR_Status, BOOL CNR_Status);
     void OnGW();
 	void OnOpenBarrier(UINT ID);
 	void OnProceed();
@@ -41,7 +42,9 @@ public:
 	void UpdatePrimeMoverWeighingData(BOOL canAssign2ndPrimeMover);
     void ProcessCameraRequest(int nIndex);
 
-
+	CSensor m_S1;
+    CSensor m_S2;
+	void SetupIcons();
     CRect PreviewRect[9];
     CJpgPicture m_jpg[9];
 	int jpgkey, flagStable, iCounter, iBarrier;
@@ -96,10 +99,6 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg void OnRadio3();
 	afx_msg void OnRadio4();
-	afx_msg void OnBR1Close();
-	afx_msg void OnBR1Open();
-	afx_msg void OnBR2Close();
-	afx_msg void OnBR2Open();
 	afx_msg void OnButton4();
 	afx_msg void OnButton6();
 	afx_msg void OnButton7();

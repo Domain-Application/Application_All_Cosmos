@@ -23,7 +23,20 @@
 #define timer_weight 2
 
 #include "tcpServer.h"
+#include <afxmt.h>
+#include <map>
+
 #define WM_NEW_MESSAGE (WM_USER + 100)
+
+struct ServerInfo {
+    int port;
+    CString portName;
+    BOOL bRunning;
+    CWinThread* pThread;
+    CTcpServer* pServer;
+    CString strBuffer;
+    class CNView* pView;
+};
 
 class CNView : public CCctvView
 {
@@ -46,14 +59,12 @@ public: // create from serialization only
 	BOOL startOpenBarrier;
 
     DECLARE_DYNCREATE(CNView)
-	CTcpServer* m_pTcpServer;
-    CWinThread* m_pServerThread;
-    int m_nCurrentPort;
-    volatile BOOL m_bServerRunning;
-	CString m_strMsgBuffer;
-	void OnCreateTCPServer();
+    
+    CCriticalSection m_csServer;
+    std::map<CString, ServerInfo*> m_serverInstances;
+    
+    void OnCreateTCPServer(const CString& portFieldName);
 	BOOL requireOpenBackBarrier;
-	void OnOpenOppositeBarrier();
 	int manual_open_barrier1;
     int manual_open_barrier2;
 	BOOL gateOpened_By_Security;

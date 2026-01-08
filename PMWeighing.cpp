@@ -248,8 +248,7 @@ void CSecurity::OnRadio3()
         OnUpdateLorry();
 		UpdatePrimeMoverWeighingData(TRUE);
 		IsZeroWt = FALSE;
-		OnOpenBarrier(ID);
-	
+		CFM20Dlg::OnOK();
 	}
 
 }
@@ -297,6 +296,7 @@ void CSecurity::OnRadio4()
 		UpdatePrimeMoverWeighingData(FALSE);
 		IsZeroWt = FALSE;
 		OnOpenBarrier(ID);
+		CFM20Dlg::OnOK();
 	}
 }
 

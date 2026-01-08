@@ -1,8 +1,4 @@
-// NView.cpp : implementation of the CNView class
-//
-
 #include "stdafx.h"
-
 #include "MENU.h"
 #include "comm.h"
 #include "NView.h"
@@ -21,13 +17,9 @@ int iStatus = 0;
 long release_wt = 30;
 int iDOCounter=0;
 
-/////////////////////////////////////////////////////////////////////////////
-// CNView
-
 IMPLEMENT_DYNCREATE(CNView, CCctvView)
 
 BEGIN_MESSAGE_MAP(CNView, CCctvView)
-    //{{AFX_MSG_MAP(CNView)
 	ON_BN_CLICKED(IDOK, OnGo)
 	ON_BN_CLICKED(IDC_RADIO1, OnRadio1)
 	ON_BN_CLICKED(IDC_RADIO2, OnRadio2)
@@ -40,26 +32,15 @@ BEGIN_MESSAGE_MAP(CNView, CCctvView)
 	ON_BN_CLICKED(IDC_RestartCameras, OnRestartCameras)
 	ON_BN_CLICKED(IDC_BUTTON1, OnButton1)
     ON_MESSAGE(WM_NEW_MESSAGE, OnNewMessage)
-	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
-CNView *pView = NULL;
-/////////////////////////////////////////////////////////////////////////////
-// CNView construction/destruction
+CNView *pView = NULL
 
-CNView::CNView()
-    : CCctvView(app->IDD_DOMVIEW)
+CNView::CNView(): CCctvView(app->IDD_DOMVIEW)
 {
-    //{{AFX_DATA_INIT(CNView)
-	//}}AFX_DATA_INIT
-	// TODO: add construction code here
     weight_alt_flag = -1;
-    TotalCameras = 3;
+    TotalCameras = 4;
     m_swGrid = FALSE;
-    m_pTcpServer = NULL;
-    m_pServerThread = NULL;
-    m_nCurrentPort = -1;
-    m_strMsgBuffer = _T("");
     requireOpenBackBarrier = FALSE;
     manual_open_barrier1 = weighbridge.lval(weighbridge_MOB1);
     manual_open_barrier2 = weighbridge.lval(weighbridge_MOB2);
@@ -140,19 +121,22 @@ BOOL ValidateISO6346(const CString& strContainer)
 
 LRESULT CNView::OnNewMessage(WPARAM wParam, LPARAM lParam)
 {
+    ServerInfo* pInfo = (ServerInfo*)wParam;
     CString* pStr = (CString*)lParam;
+    if (!pInfo || !pStr) return 0;
+
     CString strMsg = *pStr;
-    delete pStr; // Clean up the received object immediately
+    delete pStr;
 
-    // Append new data to the buffer
-    m_strMsgBuffer += strMsg;
+    // Use the buffer specific to this server instance
+    pInfo->strBuffer += strMsg;
 
-    // Safety check: prevent buffer from growing too large (e.g., 100KB)
-    if (m_strMsgBuffer.GetLength() > 100000)
+    if (pInfo->strBuffer.GetLength() > 100000)
     {
-        m_strMsgBuffer.Empty();;
+        pInfo->strBuffer.Empty();
         return 0;
     }
+
     BOOL bFound = TRUE;
     while (bFound)
     {
@@ -161,67 +145,67 @@ LRESULT CNView::OnNewMessage(WPARAM wParam, LPARAM lParam)
         // Scenario 1: License Plate
         CString strStartTag = _T("<licensePlate>");
         CString strEndTag = _T("</licensePlate>");
-        int nStart = m_strMsgBuffer.Find(strStartTag);
+        int nStart = pInfo->strBuffer.Find(strStartTag);
         if (nStart != -1)
         {
-            int nEnd = m_strMsgBuffer.Find(strEndTag, nStart);
+            int nEnd = pInfo->strBuffer.Find(strEndTag, nStart);
             if (nEnd != -1)
             {
                 int nValStart = nStart + strStartTag.GetLength();
-                CString strVal = m_strMsgBuffer.Mid(nValStart, nEnd - nValStart);
+                CString strVal = pInfo->strBuffer.Mid(nValStart, nEnd - nValStart);
                 if (!strVal.IsEmpty())
                 {
-                    CString strMsg;
-                    strMsg.Format(_T("License Plate: %s"), strVal);
-                    RecordStatusLog(strMsg);
+                    CString strLog;
+                    strLog.Format(_T("[%s] License Plate: %s"), pInfo->portName, strVal);
+                    RecordStatusLog(strLog);
                     #ifdef _DEBUG
                     push_plateno2.Format("TEST123");
                     #endif //_DEBUG
                 }
-                // Remove this message from buffer
-                m_strMsgBuffer.Delete(nStart, (nEnd + strEndTag.GetLength()) - nStart);
+                pInfo->strBuffer.Delete(nStart, (nEnd + strEndTag.GetLength()) - nStart);
                 bFound = TRUE;
-                continue; // Restart loop to check for more
+                continue;
             }
         }
 
         // Scenario 2: Container Number
-        // We need both Main and Sub to be present to process
         CString strMainStart = _T("<containerMainNum>");
         CString strMainEnd = _T("</containerMainNum>");
         CString strSubStart = _T("<containerSubNum>");
         CString strSubEnd = _T("</containerSubNum>");
 
-        int nMainStart = m_strMsgBuffer.Find(strMainStart);
-        int nSubStart = m_strMsgBuffer.Find(strSubStart);
+        int nMainStart = pInfo->strBuffer.Find(strMainStart);
+        int nSubStart = pInfo->strBuffer.Find(strSubStart);
 
         if (nMainStart != -1 && nSubStart != -1)
         {
-            int nMainEnd = m_strMsgBuffer.Find(strMainEnd, nMainStart);
-            int nSubEnd = m_strMsgBuffer.Find(strSubEnd, nSubStart);
+            int nMainEnd = pInfo->strBuffer.Find(strMainEnd, nMainStart);
+            int nSubEnd = pInfo->strBuffer.Find(strSubEnd, nSubStart);
 
             if (nMainEnd != -1 && nSubEnd != -1)
             {
-                CString strContainerMain = GetXmlValue(m_strMsgBuffer, "containerMainNum");
-                CString strContainerSub = GetXmlValue(m_strMsgBuffer, "containerSubNum");
+                CString strContainerMain = GetXmlValue(pInfo->strBuffer, "containerMainNum");
+                CString strContainerSub = GetXmlValue(pInfo->strBuffer, "containerSubNum");
                 
                 if (!strContainerMain.IsEmpty() && !strContainerSub.IsEmpty())
                 {
                     CString strContainerFull = strContainerMain + strContainerSub;
-                    CString strMsg;
-                    strMsg.Format(_T("Container Full: %s"), strContainerFull);
-                    RecordStatusLog(strMsg);
+                    CString strLog;
+                    strLog.Format(_T("[%s] Container Full: %s"), pInfo->portName, strContainerFull);
+                    RecordStatusLog(strLog);
                     if(ValidateISO6346(strContainerFull))
                     {
                         push_plateno2.Format("%s", strContainerFull);
                     }
-                    int nMainS = m_strMsgBuffer.Find(strMainStart);
-                    int nMainE = m_strMsgBuffer.Find(strMainEnd, nMainS);
-                    m_strMsgBuffer.Delete(nMainS, (nMainE + strMainEnd.GetLength()) - nMainS);
                     
-                    int nSubS = m_strMsgBuffer.Find(strSubStart);
-                    int nSubE = m_strMsgBuffer.Find(strSubEnd, nSubS);
-                    m_strMsgBuffer.Delete(nSubS, (nSubE + strSubEnd.GetLength()) - nSubS);
+                    // Note: We search again because the indices might have shifted if multiple tags were present
+                    int nMS = pInfo->strBuffer.Find(strMainStart);
+                    int nME = pInfo->strBuffer.Find(strMainEnd, nMS);
+                    pInfo->strBuffer.Delete(nMS, (nME + strMainEnd.GetLength()) - nMS);
+                    
+                    int nSS = pInfo->strBuffer.Find(strSubStart);
+                    int nSE = pInfo->strBuffer.Find(strSubEnd, nSS);
+                    pInfo->strBuffer.Delete(nSS, (nSE + strSubEnd.GetLength()) - nSS);
                     
                     bFound = TRUE;
                     continue;
@@ -233,50 +217,45 @@ LRESULT CNView::OnNewMessage(WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-struct ServerThreadParam
-{
-    int port;
-    CNView* pView;
-};
-
 UINT __cdecl ServerThreadFunc(LPVOID pParam)
 {
-    ServerThreadParam* pThreadParam = (ServerThreadParam*)pParam;
-    int port = pThreadParam->port;
-    CNView* pView = pThreadParam->pView;
-    delete pThreadParam; 
+    ServerInfo* pInfo = (ServerInfo*)pParam;
+    if (!pInfo) return 0;
+
+    int port = pInfo->port;
+    CNView* pView = pInfo->pView;
 
     // Initialize sockets for this thread
     if (!AfxSocketInit())
         return 0;
 
     CTcpServer server;
-    pView->m_pTcpServer = &server;
+    pInfo->pServer = &server;
 
     if (!server.StartServer(port))
     {
-        pView->m_pTcpServer = NULL;
+        pInfo->pServer = NULL;
         return 0;
     }
 
     CString data;
+    CString portLog;
+    portLog.Format("%s_lpr.xml", pInfo->portName);
 
     // Loop and wait for messages
-    while (TRUE)
+    while (pInfo->bRunning)
     {
         // Wait for client
         if (!server.AcceptClient())
         {  
-            // AcceptClient returns FALSE if the socket is closed (e.g. OnDestroy)
             break;
         }
 
-        if (!pView->m_bServerRunning)
+        if (!pInfo->bRunning)
             break;
 
-        CString cFilename = "lpr.xml";
         DWORD dwReturn;
-        HANDLE hFile = CreateFile(cFilename, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        HANDLE hFile = CreateFile(portLog, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         while (TRUE)
         {
             data.Empty();
@@ -289,51 +268,23 @@ UINT __cdecl ServerThreadFunc(LPVOID pParam)
 
             if (hFile != INVALID_HANDLE_VALUE)
             {
-                BOOL flagWrite = WriteFile(hFile, data, len, &dwReturn, NULL);
+                WriteFile(hFile, data, len, &dwReturn, NULL);
             }
             // Send message to dialog (UI thread)
             if (::IsWindow(pView->m_hWnd))
-                ::PostMessage(pView->m_hWnd, WM_NEW_MESSAGE, len, (LPARAM)new CString(data));
+                ::PostMessage(pView->m_hWnd, WM_NEW_MESSAGE, (WPARAM)pInfo, (LPARAM)new CString(data));
         }
         if (hFile != INVALID_HANDLE_VALUE)
         {
             CloseHandle(hFile);
         }
         
-        // Client disconnected, close client socket and wait for next one
         server.CloseClient();
     }
 
     server.Close();
-    pView->m_pTcpServer = NULL;
+    pInfo->pServer = NULL;
     return 0;
-}
-
-void CNView::OnOpenOppositeBarrier()
-{
-    int br2_status = weighbridge.lval(weighbridge_BR2), loop2_status = weighbridge.lval(weighbridge_LOOP2);
-    int br1_status = weighbridge.lval(weighbridge_BR1), loop1_status = weighbridge.lval(weighbridge_LOOP1);
-    
-	if(cweight == 0 && DiData[br2_status-1] && !DiData[loop2_status-1] && program4 == 1 && !gateOpened_By_Security)
-	{
-		m_br1.OpenBarrier();	
-	}
-    else if(cweight == 0 && DiData[br1_status-1] && !DiData[loop1_status-1] && program4 == 2 && !gateOpened_By_Security)
-    {
-        m_br2.OpenBarrier();
-    }
-    else if(gateOpened_By_Security && cweight == 0 && program4 == 1)
-    {
-        m_br2.OpenBarrier();
-        m_br1.CloseBarrier();
-    }
-    else if(isWBDualMode() && gateOpened_By_Security && cweight == 0 && program4 == 2)
-    {
-        m_br1.OpenBarrier();
-        m_br2.CloseBarrier();
-    }
-    startOpenBarrier = FALSE;
-    gateOpened_By_Security = FALSE;
 }
 
 void CNView::OnTimer(UINT nIDEvent) 
@@ -361,86 +312,99 @@ void CNView::DoDataExchange(CDataExchange* pDX)
 
 }
 
-void CNView::OnCreateTCPServer()
+void CNView::OnCreateTCPServer(const CString& portFieldName)
 {
-    CString msg;
-	
-    
-    int newPort = weighbridge.lval(GetDbFieldNo(&weighbridge, "ANPR_PORT"));
+    CSingleLock lock(&m_csServer, TRUE);
 
-    if (m_pServerThread)
+    int newPort = weighbridge.lval(GetDbFieldNo(&weighbridge, (char*)(LPCTSTR)portFieldName));
+    if (newPort <= 0) return;
+
+    ServerInfo* pInfo = NULL;
+    auto it = m_serverInstances.find(portFieldName);
+    if (it != m_serverInstances.end())
+    {
+        pInfo = it->second;
+    }
+
+    if (pInfo)
     {
         DWORD dwExitCode;
-        GetExitCodeThread(m_pServerThread->m_hThread, &dwExitCode);
-
-        if (dwExitCode == STILL_ACTIVE)
+        if (pInfo->pThread && GetExitCodeThread(pInfo->pThread->m_hThread, &dwExitCode) && dwExitCode == STILL_ACTIVE)
         {
-            if (newPort == m_nCurrentPort)
+            if (newPort == pInfo->port)
             {
-                // AfxMessageBox(_T("Server is already running on this port."));
-                return;
+                return; // Already running on this port
             }
             else
             {
-                // Stop current server
-                m_bServerRunning = FALSE;
+                // Stop current server for this port field
+                pInfo->bRunning = FALSE;
 
                 // Connect a dummy socket to unblock Accept()
                 CSocket killerSocket;
                 if (killerSocket.Create())
                 {
-                    killerSocket.Connect(_T("127.0.0.1"), m_nCurrentPort);
+                    killerSocket.Connect(_T("127.0.0.1"), pInfo->port);
                     killerSocket.Close();
                 }
                 
-                // Wait for thread to exit
-                WaitForSingleObject(m_pServerThread->m_hThread, 5000);
-                delete m_pServerThread;
-                m_pServerThread = NULL;
-                m_pTcpServer = NULL;
+                WaitForSingleObject(pInfo->pThread->m_hThread, 5000);
+                delete pInfo->pThread;
+                pInfo->pThread = NULL;
+                pInfo->pServer = NULL;
             }
         }
         else
         {
-            // Thread finished
-            delete m_pServerThread;
-            m_pServerThread = NULL;
-            m_pTcpServer = NULL;
+            if (pInfo->pThread) delete pInfo->pThread;
+            pInfo->pThread = NULL;
+            pInfo->pServer = NULL;
         }
     }
-
-    ServerThreadParam* pParam = new ServerThreadParam;
-    pParam->port = newPort;
-    pParam->pView = this;
-
-    m_bServerRunning = TRUE;
-    // Start background listener thread
-    m_pServerThread = AfxBeginThread(ServerThreadFunc, pParam);
-    if (m_pServerThread)
+    else
     {
-        m_pServerThread->m_bAutoDelete = FALSE; // We want to wait for it
-        m_nCurrentPort = newPort;
+        pInfo = new ServerInfo;
+        pInfo->portName = portFieldName;
+        pInfo->pView = this;
+        pInfo->strBuffer = _T("");
+        m_serverInstances[portFieldName] = pInfo;
+    }
+
+    pInfo->port = newPort;
+    pInfo->bRunning = TRUE;
+    pInfo->pThread = AfxBeginThread(ServerThreadFunc, pInfo);
+    if (pInfo->pThread)
+    {
+        pInfo->pThread->m_bAutoDelete = FALSE;
     }
 }
 
 void CNView::OnDestroy()
 {
-    m_bServerRunning = FALSE;
+    CSingleLock lock(&m_csServer, TRUE);
 
-    if (m_pServerThread)
+    for (auto it = m_serverInstances.begin(); it != m_serverInstances.end(); ++it)
     {
-        // Connect a dummy socket to unblock Accept()
-        CSocket killerSocket;
-        if (killerSocket.Create())
+        ServerInfo* pInfo = it->second;
+        if (pInfo)
         {
-            killerSocket.Connect(_T("127.0.0.1"), m_nCurrentPort);
-            killerSocket.Close();
+            pInfo->bRunning = FALSE;
+            if (pInfo->pThread)
+            {
+                CSocket killerSocket;
+                if (killerSocket.Create())
+                {
+                    killerSocket.Connect(_T("127.0.0.1"), pInfo->port);
+                    killerSocket.Close();
+                }
+                WaitForSingleObject(pInfo->pThread->m_hThread, 5000);
+                delete pInfo->pThread;
+            }
+            delete pInfo;
         }
-
-        WaitForSingleObject(m_pServerThread->m_hThread, 5000); // Wait up to 5 seconds
-        delete m_pServerThread;
-        m_pServerThread = NULL;
     }
+    m_serverInstances.clear();
+
     CCctvView::OnDestroy();
 }
 
@@ -460,12 +424,9 @@ void CNView::InitiateDualMode()
 
 void CNView::OnInitialUpdate()
 {
-	app->picFolder.Format("c:\\data\\vance");
+	app->picFolder.Format("c:\\data");
 	CreateDirectory(app->picFolder, NULL);
-
-
     CCctvView::OnInitialUpdate();
-
     pView = this;
 	SetDlgItemText(IDC_TEXTBOX1,"Initialize...");
 	displaySystemMode();//brian//2025-12-22//add display manual mode or dual mode
@@ -473,7 +434,8 @@ void CNView::OnInitialUpdate()
 	OnRadio1();
     ShowInitFrame();
     ShowInformation();
-    OnCreateTCPServer();
+    OnCreateTCPServer("ANPR_PORT");
+    OnCreateTCPServer("ANPR_PORT2");
 }
 
 int CNView::OnGw()
@@ -503,24 +465,7 @@ int CNView::OnGw()
     HWND hWnd2 = ::GetDlgItem( GetSafeHwnd(), IDC_STABLE_FLAG);
     BST = flagStable ? BST_CHECKED : BST_UNCHECKED;
     ::SendMessage(hWnd2, BM_SETCHECK, BST, 0L);
-
     iDOCounter++;
-    int mod = iDOCounter % 4;
-    if( mod==0 ) {
-        int flag2 = readADAMData(DoData,1);
-//        ShowDO();
-    }
-    else {
-        int flag2 = readADAMData(DiData,2);
-
-        mod = CheckManualOpenBarrier(iDOCounter,m_list);
-		if(mod) {
-		}
-
-//        ShowDI();
-    }
-
-
     int weight_status = weighbridge.lval(weighbridge_ALT);
     if(weight_status) {
 
@@ -598,16 +543,16 @@ void CNView::ShowInitFrame()
 
     fg.SetTitle("W. Type",870,4);
     fg.SetTitle("Remarks", 3000, 1);
-	fg.SetTitle("Bin", 2000, 1);
+	
 
-	MGRID fg2(&m_grid2, NULL, 0, 7);
-    fg2.SetTitle("No", 500, 1);
-    fg2.SetTitle("Bin No.", 1200);
-	fg2.SetTitle("Ticket",1300,1);
-    fg2.SetTitle("Lorry Carry In", 1500);
-    fg2.SetTitle("Date/Time In", 1600);
-    fg2.SetTitle("Lorry Carry Out", 1500);
-	fg2.SetTitle("Date/Time Out", 1500);
+	// MGRID fg2(&m_grid2, NULL, 0, 7);
+    // fg2.SetTitle("No", 500, 1);
+    // fg2.SetTitle("Bin No.", 1200);
+	// fg2.SetTitle("Ticket",1300,1);
+    // fg2.SetTitle("Lorry Carry In", 1500);
+    // fg2.SetTitle("Date/Time In", 1600);
+    // fg2.SetTitle("Lorry Carry Out", 1500);
+	// fg2.SetTitle("Date/Time Out", 1500);
 }
 
 void CNView::SetActiveStatus(DB *df,long rec)
@@ -628,7 +573,7 @@ void CNView::SetActiveStatus(DB *df,long rec)
 		else {
 			g.SetText("Auto");
 		}
-		g.SetText(df, REM,BIN | 0x100, -1);
+		g.SetText(df, REM, -1);
 		return;
 	}
 }

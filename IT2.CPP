@@ -117,7 +117,7 @@ BOOL CIt2::OnInitDialog()
 
 void CIt2::LoadImages()
 {
-     int TotalCameras = 3;
+     int TotalCameras = 4;
 	 CString s;
 
      for(int i=1; i<=TotalCameras; i++) {
@@ -177,11 +177,12 @@ void CIt2::OnTimer(UINT nIDEvent)
     CFEdit::OnTimer(nIDEvent);
 }
 
-void CSecurity::OnSecond(BOOL LPR_Status, BOOL CNR_Status)
+BOOL CSecurity::OnSecond(BOOL LPR_Status, BOOL CNR_Status)
 {
 	CString strSQL;
 	if(m_contno.GetLength()==11) {
-		lset(df->dat[LORRY], m_contno);
+		lset(df->dat[WB_Container], m_contno);
+        lset(df->dat[LORRY], m_vehicle);
         lset(lorry.dat[1], m_vehicle);
         qd(lorry.dat[1], &lorry);
         ltodb(lorry.val(GetDbFieldNo(&lorry, "TARE")), df, PM2WT);
@@ -212,7 +213,7 @@ void CSecurity::OnSecond(BOOL LPR_Status, BOOL CNR_Status)
     h.iType = type;
 
     UINT ID = h.DoModal();
-	if(ID==IDCANCEL) return;
+	if(ID==IDCANCEL) return FALSE;
 
 	STCR = type;
     DB *pf = (type==1) ? &wb : &despatch;
@@ -229,7 +230,34 @@ void CSecurity::OnSecond(BOOL LPR_Status, BOOL CNR_Status)
     normal_report_name.Format("%s.rpt", pf->name);
 	pf->PrintOneFormOnly(normal_report_name);
 	s.Format("Delete from [%s] where [%s] = '%s'", df->name, df->fieldName[1], df->dat[1]);
-	runsql(s);
+    RunSql(s);
+    DB sub_table;
+    CString sub_Table_Name;
+    if(!strcmp(pf->name, "WB")) {
+        sub_Table_Name = "wbdata";
+    }
+    else {
+        sub_Table_Name = "dbdata";
+    }
+    tado(&sub_table, sub_Table_Name);
+    strSQL.Format("select * from fdata where refno = '%s'", df->dat[1]);
+    DB adoTmp;
+    ado(&adoTmp, "", NULL, strSQL);
+    long rec  = read_sumindex(0, &adoTmp);
+    if(rec > 0)
+    {
+        for(int i = 1; i <= rec; i++)
+        {
+            readrec(i, &adoTmp);
+            fetch(&sub_table, &adoTmp);
+            sub_table.AddNew();
+        }   
+        strSQL.Format("delete fdata where refno = '%s'", df->dat[1]);
+        RunSql(strSQL);
+    }
+    dclose(&adoTmp);
+    dclose(&sub_table); //TODO: investigate why require instantiate another DB pointer or else once Added New, The weighing entry facing system crash
+    return TRUE;
 }
 
 void CIt2::OnCancel()

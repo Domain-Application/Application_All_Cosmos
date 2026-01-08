@@ -82,8 +82,14 @@ int CMenuApp::SubProgram(int key)
     case M_CTRL*10+8:
         AdminDb(&warehouse);
         break;
-    case M_CTRL*10+9:
+    case M_CTRL*10+91:
         AdminDb(&unit);
+        break;
+    case M_CTRL*10+92:
+        AdminDb(&container);
+        break;
+    case M_CTRL*10+93:
+        AdminDb(&trailer);
         break;
     case M_OTHER*10+2:
         BackupProcess();

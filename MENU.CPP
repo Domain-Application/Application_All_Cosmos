@@ -20,6 +20,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+DB container(IDD_STATUS), trailer(IDD_STATUS);
 DB accode(IDD_ACCODE),prodtype(IDD_PT,2);
 DB Status(IDD_STATUS),stype;
 DB vehicle(IDD_LORRY),pm1no(IDD_LORRY),pm2no(IDD_LORRY);
@@ -31,7 +32,6 @@ DB warehouse(IDD_WAREHOUSE,5);
 DB transp(IDD_TRANSP,3);
 DB pmtdat(IDD_PMTDAT,7),pm1(IDD_PMTDAT,7),pm2(IDD_PMTDAT,7);
 DB weighbridge(IDD_WEIGHBRIDGE);
-DB weighbridge2(IDD_WEIGHBRIDGE);
 DB first(IDD_WB);
 DB lorry(IDD_LORRY);
 
@@ -118,6 +118,8 @@ BOOL CMenuApp::Domain()
 
 void CMenuApp::OpenAllDataFile()
 {
+    ado(&container,"container");
+    ado(&trailer,"trailer");
     ado(&first,"first",init_wb);
     tado(&pmtdat,"pmtdat",init_pmtdat);
     ado(&pm1,"pm1",init_pmtdat);
@@ -128,20 +130,14 @@ void CMenuApp::OpenAllDataFile()
 	}
     ado(&camera,m_camera);
     ado(&weighbridge,"weighbridge",init_weighbridge,NULL,cnn__5);
-    ado(&weighbridge2,"weighbridge",init_weighbridge);
-
 	tado(&despatch_ticket_info, "despatch_ticket_info");
 	tado(&receive_ticket_info, "receive_ticket_info");
-
 	first.m_strTicketNo = despatch_ticket_info.m_strTicketNo; 
 	first.m_strRootTable = despatch_ticket_info.m_strTicketNo;
-	
 	first.m_strTicketNo = receive_ticket_info.m_strTicketNo; 
 	first.m_strRootTable = receive_ticket_info.m_strTicketNo;
-
 	despatch.m_strTicketNo = despatch_ticket_info.m_strTicketNo; 
 	despatch.m_strRootTable = despatch_ticket_info.m_strTicketNo;
-	
 	wb.m_strTicketNo = receive_ticket_info.m_strTicketNo; 
 	wb.m_strRootTable = receive_ticket_info.m_strTicketNo; 
     ado(&unit,"unit");
@@ -444,18 +440,5 @@ int CMenuApp::ExitInstance()
 
 BOOL CMenuApp::IsHasSingleTask()
 {
-
-#ifdef _DEBUG
-     return FALSE;
-#endif //_DEBUG
-
-	if(program4) {
-         CConnecting2PLC q;
-         q.szIPAddress = szIPAddress;
-         int id = q.DoModal();
-         if(id==IDCANCEL) {
-		     return TRUE;
-         }
-     }
-     return FALSE;
+    return FALSE;
 }

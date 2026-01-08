@@ -32,8 +32,6 @@ void CLorry::DoDataExchange(CDataExchange* pDX)
 {
     CStaff::DoDataExchange(pDX);
     //{{AFX_DATA_MAP(CLorry)
-	DDX_Control(pDX, IDC_WB1, m_wb1);
-	DDX_Control(pDX, IDC_WB2, m_wb2);
         // NOTE: the ClassWizard will add DDX and DDV calls here
     //}}AFX_DATA_MAP
 }
@@ -52,69 +50,16 @@ END_MESSAGE_MAP()
 void CLorry::ShowInformation()
 {
     CStaff::ShowInformation();
+
+    int i = df->lval(Lo_INDICATOR);
+    SetDlgItemText(IDC_VAR2, strIndicator(i) );
+
 }
 
 
 BOOL CLorry::OnInitDialog()
 {
     CStaff::OnInitDialog();
-
-    strcpy(cmd1,"W1");
-    strcpy(cmd2,"W2");
-    strWM = profile.dat[Pro_WtServer];
-    strWM.TrimRight();
-	int offset = instr(1, strWM, ",");
-	if(offset==0) {
-        strWM2 = strWM;
-	}
-    else {
-        char szTmp[10000];
-
-        strcpy(szTmp, strWM);
-        szTmp[offset-1] = 0;
-        strWM  = szTmp;
-        strWM2 = &szTmp[offset];
-        strcpy(cmd2,"W1");
-    }
-
-    int flag1 = ClientRequest(strWM, cmd1 , errmsg);
-    if(flag1==-1) {
-        strWM = "";
-        CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO2);
-        GetDlgItem(IDC_RADIO1)->EnableWindow(FALSE);
-        GetDlgItem(IDC_WB1)->EnableWindow(FALSE);
-    }
-    else {
-        SetDlgItemText(IDC_WB1, strWM);
-    }
-
-    int flag2 = ClientRequest(strWM2, cmd2 , errmsg);
-    if(flag2==-1) {
-        strWM2 = "";
-        CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO1);
-        GetDlgItem(IDC_RADIO2)->EnableWindow(FALSE);
-        GetDlgItem(IDC_WB2)->EnableWindow(FALSE);
-    }
-    else {
-        SetDlgItemText(IDC_WB2, strWM2);
-    }
-
-    if(flag2==-1 && flag1==-1) {
-        MessageBox("Weight server not found");
-        OnCancel();
-        return TRUE;
-    }
-    else if(flag2==0 && flag1==0) {
-        if(app->m_strComputerName.CompareNoCase(strWM)==0) {
-            CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO1);
-        }
-        else if(app->m_strComputerName.CompareNoCase(strWM2)==0) {
-            CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO2);
-        }
-        else {
-            CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO1+current_indicator-1);
-        }
-    }
 
     SetTimer(1,500,NULL);
     return TRUE;  // return TRUE unless you set the focus to a control
@@ -133,44 +78,10 @@ void CLorry::OnTimer(UINT nIDEvent)
 
     busy = TRUE;
 
-    char tmp[200];
-	int flag,key = GetCheckedRadioButton(IDC_RADIO1,IDC_RADIO2);
-
-    if(strlen(strWM)) {
-        flag = ClientRequest(strWM, cmd1 , errmsg);
-        sprintf(tmp,"%6ld",tcpWeight);
-        m_wb1.SetWindowText( putnum0(tmp));
-        if(key==IDC_RADIO1) {
-            current_indicator = 1;
-            m_wb1.SetForeColor(RGB(0,0,0));
-            m_wb1.SetBorderColor(RGB(255,0,0));
-            SetDlgItemText(IDC_WT, putnum0(tmp));
-			current_weight = tcpWeight;
-        }
-        else {
-            m_wb1.SetForeColor(RGB(164,164,164));
-            m_wb1.SetBorderColor(RGB(0,0,0));
-            current_indicator = 2;
-        }
-    }
-
-    if(strlen(strWM2)) {
-        flag = ClientRequest(strWM2, cmd2 , errmsg);
-        sprintf(tmp,"%6ld",tcpWeight);
-        m_wb2.SetWindowText( putnum0(tmp));
-        if(key==IDC_RADIO1) {
-            m_wb2.SetForeColor(RGB(164,164,164));
-            m_wb2.SetBorderColor(RGB(0,0,0));
-            current_indicator = 1;
-        }
-        else {
-            m_wb2.SetForeColor(RGB(0,0,0));
-            m_wb2.SetBorderColor(RGB(255,0,0));
-            SetDlgItemText(IDC_WT, putnum0(tmp));
-			current_weight = tcpWeight;
-            current_indicator = 2;
-        }
-    }
+	char tmp[99];
+    sprintf(tmp,"%6ld",cweight);
+    SetDlgItemText(IDC_WT, putnum0(tmp));
+	current_weight = cweight;
 	
     busy = FALSE;
 }
@@ -192,9 +103,30 @@ int Lorry_AdminDb(DB *df,int flag)
     return 1;
 }
 
+int Lorry_initial(DB *df,int *fld)                //initial setting
+{
+    int j= 0;
+    fld[j++] = Lo_INDICATOR;
+    if(atoi(user.dat[UR_LEVEL])<99) {
+        fld[j++] = Lo_LPRNO;
+        fld[j++] = Lo_TARE;
+    }
+	return 1;
+}
+
+int lorry_save(DB *df,int flagi)
+{
+    if( df->IsBlank(Lo_LPRNO) ) {
+		lset( df->dat[Lo_LPRNO], df->dat[1]);
+    }
+    return 1;
+}
+
 void init_lorry(DB *df)
 {
     df->e->AdminDb = Lorry_AdminDb;
+    df->e->initial = Lorry_initial;
+    df->e->save     = lorry_save;
 }
 
 void CLorry::OnButton1() 
@@ -202,6 +134,8 @@ void CLorry::OnButton1()
     if(SaveFlag == CANNOTSAVE) return;
 
     df->FldDefault(Lo_TIME);
-    ltodb(current_weight, df, Lo_TARE);
+    ltodb(cweight, df, Lo_TARE);
+
+    ltodb ( program4, df, Lo_INDICATOR);
 	ShowInformation();
 }

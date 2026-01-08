@@ -32,9 +32,28 @@ int     iReceiveTimeout=2000;
 CString WeightServer = "localhost";
 BYTE DiData[500];
 BYTE DoData[500];
+BYTE adamData[1280];
 
 CString last_ms;
 
+int SensorStatus(int no)
+{
+	if(ADAM_flag) return 0;
+
+	int fld = 0;
+    if(no==1 || no==4) fld = weighbridge_Sensor1;
+    if(no==2 || no==3) fld = weighbridge_Sensor2;
+
+
+    int point = weighbridge.lval(fld);
+    if(point==0) {
+        return FALSE;
+    }
+	if(no>2) point += 32;
+    
+
+    return int( adamData[ point - 1] );
+}
 
 void addLog(const char *msg)
 {

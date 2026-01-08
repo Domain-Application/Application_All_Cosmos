@@ -57,9 +57,12 @@ void CSecurity::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_BR1DN, m_led[1]);
     DDX_Control(pDX, IDC_BR2UP, m_led[2]);
     DDX_Control(pDX, IDC_BR2DN, m_led[3]);
-
+    DDX_Control(pDX, IDC_S1, m_S1);
+    DDX_Control(pDX, IDC_S2, m_S2);
 	m_br1.no = 1;
 	m_br2.no = 2;
+    m_S1.no = 1;
+    m_S2.no = 2;
 }
 
 
@@ -71,10 +74,6 @@ BEGIN_MESSAGE_MAP(CSecurity, CFM20Dlg)
 	ON_BN_CLICKED(IDC_BUTTON2, OnButton2)
 	ON_BN_CLICKED(IDC_BUTTON3, OnTakePhotos)
 	ON_WM_PAINT()
-	ON_BN_CLICKED(IDC_BR1Close, OnBR1Close)
-	ON_BN_CLICKED(IDC_BR1Open, OnBR1Open)
-	ON_BN_CLICKED(IDC_BR2Close, OnBR2Close)
-	ON_BN_CLICKED(IDC_BR2Open, OnBR2Open)
 	ON_BN_CLICKED(IDC_BUTTON4, OnButton4)
 	ON_BN_CLICKED(IDC_BUTTON5, OnButton5)
 	ON_BN_CLICKED(IDC_BUTTON6, OnButton6)
@@ -173,24 +172,10 @@ BOOL CSecurity::OnInitDialog()
     CFM20Dlg::OnInitDialog();
     SetWindowLocation( this );
 
-    CWnd *pS1 = (CWnd *)GetDlgItem(IDC_BR1UP);
-    if(pS1) {
-        m_led[0].SetLED(pS1,ID_LED_RED,ID_SHAPE_SQUARE,1000);
-    }
-    pS1 = (CWnd *)GetDlgItem(IDC_BR1DN);
-    if(pS1) {
-        m_led[1].SetLED(pS1,ID_LED_RED,ID_SHAPE_SQUARE,1000);
-    }
-    pS1 = (CWnd *)GetDlgItem(IDC_BR2UP);
-    if(pS1) {
-        m_led[2].SetLED(pS1,ID_LED_RED,ID_SHAPE_SQUARE,1000);
-    }
-    pS1 = (CWnd *)GetDlgItem(IDC_BR2DN);
-    if(pS1) {
-        m_led[3].SetLED(pS1,ID_LED_RED,ID_SHAPE_SQUARE,1000);
-    }
     CheckRadioButton( IDC_RADIO1, IDC_RADIO4, IDC_RADIO1);
     SetTimer(1,100,NULL);
+    SetTimer(3, 200, NULL);
+    SetupIcons();
     for(int i=1; i<=5;i++) {
         CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
@@ -203,34 +188,19 @@ BOOL CSecurity::OnInitDialog()
 
 	if(!isManualSetting())
 	{
-		GetDlgItem(IDC_BR1Close)->ShowWindow(SW_HIDE);
-		GetDlgItem(IDC_BR1Open)->ShowWindow(SW_HIDE);
-		GetDlgItem(IDC_BR2Close)->ShowWindow(SW_HIDE);
-		GetDlgItem(IDC_BR2Open)->ShowWindow(SW_HIDE);
-
 		CEdit *p = (CEdit *) GetDlgItem(IDC_L1);
-		
 		p->SetReadOnly(TRUE);
 		p->SetFocus();
-		
 		CEdit *q = (CEdit *) GetDlgItem(IDC_L2);
-		
 		q->SetReadOnly(TRUE);
 		q->SetFocus();
 	}
 	else
 	{	
-		GetDlgItem(IDC_BR1Close)->ShowWindow(SW_SHOW);
-		GetDlgItem(IDC_BR1Open)->ShowWindow(SW_SHOW);
-		GetDlgItem(IDC_BR2Close)->ShowWindow(SW_SHOW);
-		GetDlgItem(IDC_BR2Open)->ShowWindow(SW_SHOW);
-
 		CEdit *p = (CEdit *) GetDlgItem(IDC_L1);
 		p->SetReadOnly(FALSE);
 		p->SetFocus();
-		
 		CEdit *q = (CEdit *) GetDlgItem(IDC_L2);
-		
 		q->SetReadOnly(FALSE);
 		q->SetFocus();
 	}
@@ -258,63 +228,6 @@ void CSecurity::OnGW()
     HWND hWnd2 = ::GetDlgItem( GetSafeHwnd(), IDC_STABLE_FLAG);
     BST = flagStable ? BST_CHECKED : BST_UNCHECKED;
     ::SendMessage(hWnd2, BM_SETCHECK, BST, 0L);
-
-	int br1_status = weighbridge.lval(weighbridge_BR1);
-	if(br1_status) {
-		//Reminder: everything here is inverted due to signal inversion
-		UINT ID = DiData[br1_status-1] ? IDI_BAR_CLOSE :  IDI_BAR_OPEN;
-		HICON m_hIcon = AfxGetApp()->LoadIcon(ID);
-		m_br1.SetIcon(m_hIcon);
-		if (ID==IDI_BAR_OPEN) {
-			if(!isWBDualMode())GetDlgItem(IDC_BR1Close)->ShowWindow(SW_SHOW);
-			if(!isWBDualMode())GetDlgItem(IDC_BR1Open)->ShowWindow(SW_HIDE);
-		}
-		else {
-			if(!isWBDualMode())GetDlgItem(IDC_BR1Close)->ShowWindow(SW_HIDE);
-			if(!isWBDualMode())GetDlgItem(IDC_BR1Open)->ShowWindow(SW_SHOW);
-		}
-
-		int br2_status = weighbridge.lval(weighbridge_BR2);
-		ID = DiData[br2_status-1] ? IDI_BAR_CLOSE :  IDI_BAR_OPEN;
-		m_hIcon = AfxGetApp()->LoadIcon(ID);
-		m_br2.SetIcon(m_hIcon);
-		if (ID==IDI_BAR_OPEN) {
-			 if(!isWBDualMode())GetDlgItem(IDC_BR2Close)->ShowWindow(SW_SHOW);				
-			 if(!isWBDualMode())GetDlgItem(IDC_BR2Open)->ShowWindow(SW_HIDE);
-		}
-		else {
-			if(!isWBDualMode())GetDlgItem(IDC_BR2Close)->ShowWindow(SW_HIDE);
-			if(!isWBDualMode())GetDlgItem(IDC_BR2Open)->ShowWindow(SW_SHOW);
-		}
-
-		int loop1_status = weighbridge.lval(weighbridge_LOOP1);
-		ID = DiData[loop1_status-1] ? IDI_LEDON :  IDI_LEDOFF;
-		m_hIcon = AfxGetApp()->LoadIcon(ID);
-		m_led1.SetIcon(m_hIcon);
-
-		int loop2_status = weighbridge.lval(weighbridge_LOOP2);
-		ID = DiData[loop2_status-1] ? IDI_LEDON :  IDI_LEDOFF;
-		m_hIcon = AfxGetApp()->LoadIcon(ID);
-		m_led2.SetIcon(m_hIcon);
-
-
-		int br1up_status = weighbridge.lval(weighbridge_BR1_UP);
-		UINT SW = DoData[br1up_status-17] ? SW_SHOW : SW_HIDE;
-		m_led[0].ShowWindow(SW);
-
-		int br1dn_status = weighbridge.lval(weighbridge_BR1_DOWN);
-		SW = DoData[br1dn_status-17] ? SW_SHOW : SW_HIDE;
-		m_led[1].ShowWindow(SW);
-
-		int br2up_status = weighbridge.lval(weighbridge_BR2_UP);
-		SW = DoData[br2up_status-17] ? SW_SHOW : SW_HIDE;
-		m_led[2].ShowWindow(SW);
-
-		int br2dn_status = weighbridge.lval(weighbridge_BR2_DOWN);
-		SW = DoData[br2dn_status-17] ? SW_SHOW : SW_HIDE;
-		m_led[3].ShowWindow(SW);
-
-	}
 }
 
 void CSecurity::OnTimer(UINT nIDEvent) 
@@ -338,11 +251,27 @@ void CSecurity::OnTimer(UINT nIDEvent)
 		KillTimer(nIDEvent);
 		OnTakePhotos();
 		GetDlgItem(IDOK)->EnableWindow(TRUE);
-        SetTimer(3,250,NULL);
 		return;
 	}
+    else if(nIDEvent==3)
+    {
+        int flag = readADAMData(adamData, 0); //Review this if in future going change from ADAM to PLC
+        m_S1.Show();
+        m_S2.Show();
+    }
     OnGW();
     CFM20Dlg::OnTimer(nIDEvent);
+}
+
+void CSecurity::SetupIcons()
+{
+    CWnd *pS1 = (CWnd *)GetDlgItem(IDC_S1);
+    m_S1.SetLED(pS1,ID_LED_RED,ID_SHAPE_SQUARE,500);
+    GetDlgItem(IDC_S1)->ShowWindow(SW_HIDE);
+
+    CWnd *pS2 = (CWnd *)GetDlgItem(IDC_S2);
+    m_S2.SetLED(pS2,ID_LED_RED,ID_SHAPE_SQUARE,500);
+    GetDlgItem(IDC_S2)->ShowWindow(SW_HIDE);
 }
 
 void CSecurity::OnCancel() 
@@ -726,18 +655,14 @@ void CSecurity::OnTakePhotos()
 
 LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
 {
-	log_proceeding(" ->Start Photo Processed");
     int i = (int)wParam;
     if (i == 0) {
-        // Finished
         UpdateData(FALSE);
         m_showjpg = 1;
         GetDlgItem(IDOK)->EnableWindow(TRUE);
         GetDlgItem(IDC_BUTTON3)->EnableWindow(TRUE);
-		log_proceeding(" ->End Photo Processed");
         return 0;
     }
-    
     CString* pStr = (CString*)lParam;
     if (pStr) {
         if (!pStr->IsEmpty()) {
@@ -751,9 +676,6 @@ LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
         }
         delete pStr;
     }
-    
-    // Load and Display Images
-    // Logic copied from original loop
     if(i == 1) {
         CString picPlate, pic_Path;
         picPlate.Format("plate%2.2i.jpg", i);
@@ -770,7 +692,6 @@ LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
              InvalidateRect( PreviewRect[5] );
         }
     }
-    
     CString file = pView->strPhoto[i];
     if(m_jpg[i].Load( file )) {
          InvalidateRect( PreviewRect[i] );
@@ -788,22 +709,6 @@ void CSecurity::OnPaint()
 		m_jpg[i].Draw(&dc,PreviewRect[i].left,PreviewRect[i].top,
                    PreviewRect[i].Width(),PreviewRect[i].Height());
     }
-}
-
-void CSecurity::OnBR1Close() 
-{
-}
-
-void CSecurity::OnBR1Open() 
-{
-}
-
-void CSecurity::OnBR2Close() 
-{
-}
-
-void CSecurity::OnBR2Open() 
-{
 }
 
 BOOL CSecurity::ManualModeActive()
