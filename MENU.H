@@ -19,6 +19,14 @@
 #include "msflexgrid.h"
 #include "mycctv.h"
 //}}AFX_INCLUDES
+extern BOOL ValidateISO6346(const CString& strContainer);
+extern BOOL IsMalaysiaPlate(const CString& str);
+extern int ProcessAnprXml(CString& strBuffer, CString& strPlate, CString& strContainer);
+
+#define ANPR_RESULT_NONE      0x00
+#define ANPR_RESULT_PLATE     0x01
+#define ANPR_RESULT_CONTAINER 0x02
+
 extern DB container;
 extern DB trailer;
 extern int SensorStatus(int no);

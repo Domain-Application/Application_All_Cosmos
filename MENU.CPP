@@ -442,3 +442,121 @@ BOOL CMenuApp::IsHasSingleTask()
 {
     return FALSE;
 }
+
+// Global helper to extract XML values
+CString GetXmlValueGlobal(const CString& strXml, const CString& strTag)
+{
+    CString strStartTag = "<" + strTag + ">";
+    CString strEndTag = "</" + strTag + ">";
+    int nStart = strXml.Find(strStartTag);
+    if (nStart == -1) return "";
+    nStart += strStartTag.GetLength();
+    int nEnd = strXml.Find(strEndTag, nStart);
+    if (nEnd == -1) return "";
+    return strXml.Mid(nStart, nEnd - nStart);
+}
+
+BOOL IsMalaysiaPlate(const CString& str)
+{
+    CString s = str;
+    s.TrimLeft(); s.TrimRight();
+    s.Replace(" ", ""); // Remove spaces
+    int len = s.GetLength();
+    if (len < 2 || len > 10) return FALSE;
+
+    int i = 0;
+    // 1-3 Letters
+    int letterCount = 0;
+    while (i < len && ((s[i] >= 'A' && s[i] <= 'Z') || (s[i] >= 'a' && s[i] <= 'z'))) {
+        letterCount++;
+        i++;
+    }
+    if (letterCount == 0 || letterCount > 3) return FALSE; 
+
+    // 1-4 Digits
+    int digitCount = 0;
+    while (i < len && (s[i] >= '0' && s[i] <= '9')) {
+        digitCount++;
+        i++;
+    }
+    if (digitCount == 0 || digitCount > 4) return FALSE;
+
+    // Optional 1 Letter at the end
+    if (i < len) {
+        if (!((s[i] >= 'A' && s[i] <= 'Z') || (s[i] >= 'a' && s[i] <= 'z'))) return FALSE;
+        i++;
+    }
+
+    return (i == len);
+}
+
+BOOL ValidateISO6346(const CString& strContainer)
+{
+    if (strContainer.GetLength() != 11)
+        return FALSE;
+
+    CString strUpper = strContainer;
+    strUpper.MakeUpper();
+
+    int charValues[26] = {
+        10, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        21, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+        32, 34, 35, 36, 37, 38
+    };
+
+    int sum = 0;
+    for (int i = 0; i < 10; ++i)
+    {
+        char c = strUpper[i];
+        int val = 0;
+        if (c >= '0' && c <= '9') val = c - '0';
+        else if (c >= 'A' && c <= 'Z') val = charValues[c - 'A'];
+        else return FALSE;
+        sum += val * (1 << i);
+    }
+
+    int checkDigit = sum % 11;
+    if (checkDigit == 10) checkDigit = 0;
+    return (checkDigit == (strUpper[10] - '0'));
+}
+
+int ProcessAnprXml(CString& strBuffer, CString& strPlate, CString& strContainer)
+{
+    int result = ANPR_RESULT_NONE;
+    strPlate.Empty();
+    strContainer.Empty();
+
+    // 1. Check for License Plate
+    CString strPlateVal = GetXmlValueGlobal(strBuffer, "licensePlate");
+    if (!strPlateVal.IsEmpty())
+    {
+        strPlate = strPlateVal;
+        result |= ANPR_RESULT_PLATE;
+        
+        // Clean up buffer for plate tag
+        int nS = strBuffer.Find("<licensePlate>");
+        int nE = strBuffer.Find("</licensePlate>", nS);
+        if (nS != -1 && nE != -1)
+            strBuffer.Delete(nS, (nE + 15) - nS); 
+    }
+
+    // 2. Check for Container
+    CString strMain = GetXmlValueGlobal(strBuffer, "containerMainNum");
+    CString strSub = GetXmlValueGlobal(strBuffer, "containerSubNum");
+    if (!strMain.IsEmpty() && !strSub.IsEmpty())
+    {
+        strContainer = strMain + strSub;
+        result |= ANPR_RESULT_CONTAINER;
+
+        // Clean up buffer for container tags
+        int nS1 = strBuffer.Find("<containerMainNum>");
+        int nE1 = strBuffer.Find("</containerMainNum>", nS1);
+        if (nS1 != -1 && nE1 != -1) strBuffer.Delete(nS1, (nE1 + 19) - nS1);
+
+        int nS2 = strBuffer.Find("<containerSubNum>");
+        int nE2 = strBuffer.Find("</containerSubNum>", nS2);
+        if (nS2 != -1 && nE2 != -1) strBuffer.Delete(nS2, (nE2 + 18) - nS2);
+    }
+
+    return result;
+}

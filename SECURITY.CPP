@@ -335,18 +335,7 @@ void CSecurity::OnOK()
 	GetDlgItem( IDOK )->EnableWindow(TRUE);
 }
 
-// Helper for parsing XML logic
-CString GetXmlValueSec(const CString& strXml, const CString& strTag)
-{
-    CString strStartTag = "<" + strTag + ">";
-    CString strEndTag = "</" + strTag + ">";
-    int nStart = strXml.Find(strStartTag);
-    if (nStart == -1) return "";
-    nStart += strStartTag.GetLength();
-    int nEnd = strXml.Find(strEndTag, nStart);
-    if (nEnd == -1) return "";
-    return strXml.Mid(nStart, nEnd - nStart);
-}
+// Image extraction helper remains local as it's specific to the API multipart response
 
 // Helper to extract specific image from multipart buffer
 // Returns size of extracted image, or 0 if not found
@@ -496,16 +485,16 @@ void CSecurity::ProcessCameraRequest(int nIndex)
         CRect cropRect(0,0,0,0);
         bool bHasCropRect = false;
 
-        if (nIndex == 1) // LPR
+        CString strPlate, strContainer;
+        int res = ProcessAnprXml(strContent, strPlate, strContainer);
+
+        if (nIndex == 1 && (res & ANPR_RESULT_PLATE))
         {
-            strResultNum = GetXmlValueSec(strContent, "licensePlate");
+            strResultNum = strPlate;
         }
-        else if (nIndex == 2) // Container
+        else if (nIndex == 2 && (res & ANPR_RESULT_CONTAINER))
         {
-            CString strMain = GetXmlValueSec(strContent, "containerMainNum");
-            CString strSub = GetXmlValueSec(strContent, "containerSubNum");
-            if (!strMain.IsEmpty() && !strSub.IsEmpty())
-                strResultNum = strMain + strSub;
+            strResultNum = strContainer;
         }
 
         if (!strResultNum.IsEmpty())
@@ -655,6 +644,7 @@ void CSecurity::OnTakePhotos()
 
 LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
 {
+    BOOL useThisLPRPicture = FALSE;
     int i = (int)wParam;
     if (i == 0) {
         UpdateData(FALSE);
@@ -666,19 +656,24 @@ LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
     CString* pStr = (CString*)lParam;
     if (pStr) {
         if (!pStr->IsEmpty()) {
-            if (i == 1) {
-                m_vehicle = *pStr;
-                SetDlgItemText(IDC_L1, m_vehicle);
-            } else if (i == 2) {
-                m_contno = *pStr;
-                SetDlgItemText(IDC_L2, m_contno);
+            if (i == 1 || i == 3) {
+                if (IsMalaysiaPlate(*pStr)) {
+                    m_vehicle = *pStr;
+                    SetDlgItemText(IDC_L1, m_vehicle);
+                    useThisLPRPicture = TRUE;
+                }
+            } else if (i == 2 || i == 4) {
+                if(ValidateISO6346(*pStr)) {    
+                    m_contno = *pStr;
+                    SetDlgItemText(IDC_L2, m_contno);
+                }
             }
         }
         delete pStr;
     }
-    if(i == 1) {
+    if( (i == 1 || i == 3) && useThisLPRPicture) {
         CString picPlate, pic_Path;
-        picPlate.Format("plate%2.2i.jpg", i);
+        picPlate.Format("plate01.jpg");
         pic_Path.Format("%s\\%s", app->picFolder, picPlate);
         if(m_jpg[4].Load( pic_Path )) {
              InvalidateRect( PreviewRect[4] );

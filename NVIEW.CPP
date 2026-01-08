@@ -34,7 +34,7 @@ BEGIN_MESSAGE_MAP(CNView, CCctvView)
     ON_MESSAGE(WM_NEW_MESSAGE, OnNewMessage)
 END_MESSAGE_MAP()
 
-CNView *pView = NULL
+CNView *pView = NULL;
 
 CNView::CNView(): CCctvView(app->IDD_DOMVIEW)
 {
@@ -48,18 +48,6 @@ CNView::CNView(): CCctvView(app->IDD_DOMVIEW)
     startOpenBarrier = FALSE;
 }
 
-CString GetXmlValue(const CString& strXml, const CString& strTag)
-{
-    CString strStartTag = "<" + strTag + ">";
-    CString strEndTag = "</" + strTag + ">";
-    int nStart = strXml.Find(strStartTag);
-    if (nStart == -1) return "";
-    nStart += strStartTag.GetLength();
-    int nEnd = strXml.Find(strEndTag, nStart);
-    if (nEnd == -1) return "";
-    return strXml.Mid(nStart, nEnd - nStart);
-}
-
 void RecordStatusLog(const CString str)//Ver 2.05
 {
 	CString strFileName;
@@ -71,55 +59,7 @@ void RecordStatusLog(const CString str)//Ver 2.05
 	}
 }
 
-// Helper function to validate ISO 6346 container number
-BOOL ValidateISO6346(const CString& strContainer)
-{
-    if (strContainer.GetLength() != 11)
-        return FALSE;
-
-    CString strUpper = strContainer;
-    strUpper.MakeUpper();
-
-    // Calculate check digit
-    // Mapping: 0-9 -> 0-9
-    // A=10, B=12, ..., Z=38 (skip 11, 22, 33)
-    int charValues[26] = {
-        10, 12, 13, 14, 15, 16, 17, 18, 19, 20, // A-J
-        21, 23, 24, 25, 26, 27, 28, 29, 30, 31, // K-T
-        32, 34, 35, 36, 37, 38                  // U-Z
-    };
-
-    int sum = 0;
-    for (int i = 0; i < 10; ++i)
-    {
-        char c = strUpper[i];
-        int val = 0;
-
-        if (c >= '0' && c <= '9')
-            val = c - '0';
-        else if (c >= 'A' && c <= 'Z')
-            val = charValues[c - 'A'];
-        else
-            return FALSE; // Invalid character
-
-        // Weight is 2^i
-        int weight = 1 << i; 
-        sum += val * weight;
-    }
-
-    int checkDigit = sum % 11;
-    if (checkDigit == 10)
-        checkDigit = 0; // ISO standard rule for remainder 10
-
-    int lastDigit = strUpper[10] - '0';
-    // If the 11th char is not a digit, it's invalid (standard requires it to be a digit)
-    if (strUpper[10] < '0' || strUpper[10] > '9')
-        return FALSE;
-
-    return (lastDigit == checkDigit);
-}
-
-LRESULT CNView::OnNewMessage(WPARAM wParam, LPARAM lParam)
+ LRESULT CNView::OnNewMessage(WPARAM wParam, LPARAM lParam)
 {
     ServerInfo* pInfo = (ServerInfo*)wParam;
     CString* pStr = (CString*)lParam;
@@ -141,76 +81,31 @@ LRESULT CNView::OnNewMessage(WPARAM wParam, LPARAM lParam)
     while (bFound)
     {
         bFound = FALSE;
+        CString strPlate, strContainer;
+        int result = ProcessAnprXml(pInfo->strBuffer, strPlate, strContainer);
 
-        // Scenario 1: License Plate
-        CString strStartTag = _T("<licensePlate>");
-        CString strEndTag = _T("</licensePlate>");
-        int nStart = pInfo->strBuffer.Find(strStartTag);
-        if (nStart != -1)
+        if (result & ANPR_RESULT_PLATE)
         {
-            int nEnd = pInfo->strBuffer.Find(strEndTag, nStart);
-            if (nEnd != -1)
+            CString strLog;
+            strLog.Format(_T("[%s] License Plate: %s"), pInfo->portName, strPlate);
+            RecordStatusLog(strLog);
+            if (IsMalaysiaPlate(strPlate))
             {
-                int nValStart = nStart + strStartTag.GetLength();
-                CString strVal = pInfo->strBuffer.Mid(nValStart, nEnd - nValStart);
-                if (!strVal.IsEmpty())
-                {
-                    CString strLog;
-                    strLog.Format(_T("[%s] License Plate: %s"), pInfo->portName, strVal);
-                    RecordStatusLog(strLog);
-                    #ifdef _DEBUG
-                    push_plateno2.Format("TEST123");
-                    #endif //_DEBUG
-                }
-                pInfo->strBuffer.Delete(nStart, (nEnd + strEndTag.GetLength()) - nStart);
-                bFound = TRUE;
-                continue;
+                // Push to global if needed, similar to security.cpp
             }
+            bFound = TRUE;
         }
 
-        // Scenario 2: Container Number
-        CString strMainStart = _T("<containerMainNum>");
-        CString strMainEnd = _T("</containerMainNum>");
-        CString strSubStart = _T("<containerSubNum>");
-        CString strSubEnd = _T("</containerSubNum>");
-
-        int nMainStart = pInfo->strBuffer.Find(strMainStart);
-        int nSubStart = pInfo->strBuffer.Find(strSubStart);
-
-        if (nMainStart != -1 && nSubStart != -1)
+        if (result & ANPR_RESULT_CONTAINER)
         {
-            int nMainEnd = pInfo->strBuffer.Find(strMainEnd, nMainStart);
-            int nSubEnd = pInfo->strBuffer.Find(strSubEnd, nSubStart);
-
-            if (nMainEnd != -1 && nSubEnd != -1)
+            CString strLog;
+            strLog.Format(_T("[%s] Container Full: %s"), pInfo->portName, strContainer);
+            RecordStatusLog(strLog);
+            if(ValidateISO6346(strContainer))
             {
-                CString strContainerMain = GetXmlValue(pInfo->strBuffer, "containerMainNum");
-                CString strContainerSub = GetXmlValue(pInfo->strBuffer, "containerSubNum");
-                
-                if (!strContainerMain.IsEmpty() && !strContainerSub.IsEmpty())
-                {
-                    CString strContainerFull = strContainerMain + strContainerSub;
-                    CString strLog;
-                    strLog.Format(_T("[%s] Container Full: %s"), pInfo->portName, strContainerFull);
-                    RecordStatusLog(strLog);
-                    if(ValidateISO6346(strContainerFull))
-                    {
-                        push_plateno2.Format("%s", strContainerFull);
-                    }
-                    
-                    // Note: We search again because the indices might have shifted if multiple tags were present
-                    int nMS = pInfo->strBuffer.Find(strMainStart);
-                    int nME = pInfo->strBuffer.Find(strMainEnd, nMS);
-                    pInfo->strBuffer.Delete(nMS, (nME + strMainEnd.GetLength()) - nMS);
-                    
-                    int nSS = pInfo->strBuffer.Find(strSubStart);
-                    int nSE = pInfo->strBuffer.Find(strSubEnd, nSS);
-                    pInfo->strBuffer.Delete(nSS, (nSE + strSubEnd.GetLength()) - nSS);
-                    
-                    bFound = TRUE;
-                    continue;
-                }
+                push_plateno2.Format("%s", strContainer);
             }
+            bFound = TRUE;
         }
     }
 
@@ -320,10 +215,10 @@ void CNView::OnCreateTCPServer(const CString& portFieldName)
     if (newPort <= 0) return;
 
     ServerInfo* pInfo = NULL;
-    auto it = m_serverInstances.find(portFieldName);
+    std::map<CString, ServerInfo*>::iterator it = m_serverInstances.find(portFieldName);
     if (it != m_serverInstances.end())
     {
-        pInfo = it->second;
+        pInfo = (*it).second;
     }
 
     if (pInfo)
@@ -383,9 +278,9 @@ void CNView::OnDestroy()
 {
     CSingleLock lock(&m_csServer, TRUE);
 
-    for (auto it = m_serverInstances.begin(); it != m_serverInstances.end(); ++it)
+    for (std::map<CString, ServerInfo*>::iterator it = m_serverInstances.begin(); it != m_serverInstances.end(); ++it)
     {
-        ServerInfo* pInfo = it->second;
+        ServerInfo* pInfo = (*it).second;
         if (pInfo)
         {
             pInfo->bRunning = FALSE;
@@ -532,7 +427,7 @@ void CNView::ShowInitFrame()
     if(screen_width >= 1900) fg.ratio = 1.23f;
 
     fg.SetTitle("No.",450,4);
-    fg.SetTitle("Vehicle/Container No.",1650,1);
+    fg.SetTitle("Container.",1650,1);
     fg.SetTitle("AC Name",3600,1);
     fg.SetTitle("Product",2600,1);
 
@@ -545,19 +440,17 @@ void CNView::ShowInitFrame()
     fg.SetTitle("Remarks", 3000, 1);
 	
 
-	// MGRID fg2(&m_grid2, NULL, 0, 7);
-    // fg2.SetTitle("No", 500, 1);
-    // fg2.SetTitle("Bin No.", 1200);
-	// fg2.SetTitle("Ticket",1300,1);
-    // fg2.SetTitle("Lorry Carry In", 1500);
-    // fg2.SetTitle("Date/Time In", 1600);
-    // fg2.SetTitle("Lorry Carry Out", 1500);
-	// fg2.SetTitle("Date/Time Out", 1500);
+	MGRID fg2(&m_grid2, NULL, 0, 5);
+    fg2.SetTitle("No", 500, 1);
+	fg2.SetTitle("Ticket",1300,1);
+    fg2.SetTitle("Vehicle", 1500);
+    fg2.SetTitle("Date/Time In", 1600);
+    fg2.SetTitle("Weight (kg)", 1100, 7);
 }
 
-void CNView::SetActiveStatus(DB *df,long rec)
+void CNView::SetActiveStatus(DB *df,long rec, int type)
 {
-	if(!stricmp(df->name, "FIRST"))
+	if(type == 1)
 	{
 		MGRID g(&m_grid,df,rec);
 		g.SetText(df,0,LORRY,ACCODE | 0x100,PT | 0x100, PM1NO,TIMEIN,FIRST,1,-1);
@@ -576,6 +469,13 @@ void CNView::SetActiveStatus(DB *df,long rec)
 		g.SetText(df, REM, -1);
 		return;
 	}
+    if(type == 2 )
+	{
+		MGRID g(&m_grid2, df, rec);
+		g.show(rec);
+		g.SetText(df, 0, 1 , LORRY, TIMEIN, FIRST, -1);
+		return;
+	}
 }
 
 void CNView::ShowInformation()
@@ -584,7 +484,7 @@ void CNView::ShowInformation()
     m_swGrid = TRUE;
 	//brian//20251231
 	CString strSQL;
-	strSQL.Format("select * from FIRST ORDER BY TIMEIN ASC");
+	strSQL.Format("select * from FIRST where container is null ORDER BY TIMEIN ASC");
     first.ReOpen(strSQL);
     long srec = read_sumindex(0,&first);
     m_grid.SetRedraw(FALSE);
@@ -592,9 +492,20 @@ void CNView::ShowInformation()
     for(long rec=1; rec<=srec; rec++) {
         readrec(rec,&first);
         m_grid.SetRow(rec);
-        SetActiveStatus(&first,rec);
+        SetActiveStatus(&first,rec, 1);
     } 
     m_grid.SetRedraw(TRUE);
+    strSQL.Format("select * from FIRST where container is not null ORDER BY TIMEIN ASC");
+    first.ReOpen(strSQL);
+    srec = read_sumindex(0,&first);
+    m_grid2.SetRedraw(FALSE);
+    m_grid2.SetRows(srec+1);
+    for(rec=1; rec<=srec; rec++) {
+        readrec(rec,&first);
+        m_grid2.SetRow(rec);
+        SetActiveStatus(&first,rec, 2);
+    } 
+    m_grid2.SetRedraw(TRUE);
     CString str;
     str.Format("%ld",srec);
     SetDlgItemText(IDC_TOTAL_VEHICLE_IN_YARD,str);

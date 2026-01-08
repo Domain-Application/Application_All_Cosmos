@@ -13,6 +13,8 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#pragma warning(disable: 4786) // Suppress identifier truncation warnings (common with STL)
+
 #include "menuDoc.h"
 #include "mgrid.h"
 #include "cctvview.h"
@@ -46,7 +48,7 @@ public: // create from serialization only
     virtual void OnSetPhotosName();
     virtual void ShowInitFrame();
     virtual void ShowInformation();
-    virtual void SetActiveStatus(DB *df,long rec);
+    virtual void SetActiveStatus(DB *df,long rec, int type);
     virtual void OnSecond();
     virtual BOOL CopyPhotoToServer(int jpgkey);
     virtual void OnW2(UINT IDD, DB *df);
