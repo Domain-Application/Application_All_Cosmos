@@ -34,6 +34,8 @@ void CIt2::DoDataExchange(CDataExchange* pDX)
     CFEdit::DoDataExchange(pDX);
     //{{AFX_DATA_MAP(CIt2)
         // NOTE: the ClassWizard will add DDX and DDV calls here
+    if (GetDlgItem(IDC_MSFLEXGRID1))
+        DDX_Control(pDX, IDC_MSFLEXGRID1, m_grid1);
     //}}AFX_DATA_MAP
 }
  
@@ -110,9 +112,58 @@ BOOL CIt2::OnInitDialog()
 	}
 	SetWindowText(t);
 	LoadImages();
+    ShowInitFrame();
+	OnRefresh();
 
     return TRUE;  // return TRUE unless you set the focus to a control
                   // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CIt2::ShowInitFrame()
+{
+    MGRID fg(&m_grid1, NULL, 0, 3);
+    fg.SetTitle("No",400);
+    fg.SetTitle("D/N No",1000);
+    fg.SetTitle("P/O No 1",1000);
+    fg.SetTitle("P/O No 2",1000);
+    fg.SetTitle("P/O Qty",1000, 7);
+    fg.SetTitle("Item Code",2100);
+    fg.SetTitle("Item Description",4800);
+    fg.SetTitle("Qty",600,7);
+    fg.SetTitle("Unit",600);
+    fg.SetTitle("Packing",1300);
+    fg.SetTitle("Unit Wt.",1100,7);
+    fg.SetTitle("No pallets.",1050,7);
+    fg.SetTitle("Pallet Wt",1050,7);
+    fg.SetTitle("Theoretical Wt.",1750,7);
+}
+
+void CIt2::OnRefresh()
+{
+    DB adoTmp;
+    CString strSQL;
+    strSQL.Format("select * from fdata where REFNO = '%s'", df->dat[1]);
+    ado(&adoTmp, "", NULL, strSQL);
+	long rec1, last1 = read_sumindex(0, &adoTmp);
+	m_grid1.SetRedraw(FALSE);
+	m_grid1.SetRows(last1 + 1);
+	for (rec1 = 1; rec1 <= last1; rec1++)
+	{
+		readrec(rec1, &adoTmp);
+		m_grid1.SetRow(rec1);
+		ReplaceSubGrid(rec1, last1, &m_grid1, &adoTmp, 1);
+	}
+	m_grid1.SetRedraw(TRUE);
+}
+
+void CIt2::ReplaceSubGrid(long rec,long irec,CMSFlexGrid *m_grid,DB *sub,int IdxItem)
+{
+    MGRID fg(m_grid, sub, rec);
+    fg.show(rec);
+    fg.SetText(sub,NULL,Wd_DO,Wd_PO1,Wd_PO2,Wd_PQTY,Wd_PT,Wd_PT | 0x100,
+          Wd_QTY,Wd_UNIT,Wd_PACKING,Wd_UW,
+          Wd_NoPallet,Wd_PalletWt,Wd_TW,
+		  -1);
 }
 
 void CIt2::LoadImages()

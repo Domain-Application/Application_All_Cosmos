@@ -49,14 +49,18 @@ void CTriggerLPR::Initial()
     memset(lpr_status, 0, sizeof(lpr_status));
     memset(vehicle_rec, 0, sizeof(vehicle_rec));
 	plateno = plateno1 = plateno2 = "";
+    m_strExternalInfo2 = "";
 }
 
-void CTriggerLPR::SetExternalData(CString strInfo, CString strImage, CString strImage2)
+void CTriggerLPR::SetExternalData(CString strInfo1, CString strInfo2, CString strImage1, CString strImage2, CString strImage3, CString strImage4)
 {
     m_bUseExternalData = TRUE;
-    m_strExternalInfo = strInfo;
-    m_strExternalImage = strImage;
+    m_strExternalInfo = strInfo1;
+    m_strExternalInfo2 = strInfo2;
+    m_strExternalImage = strImage1;
     m_strExternalImage2 = strImage2;
+    m_strExternalImage3 = strImage3;
+    m_strExternalImage4 = strImage4;
 }
 
 void CTriggerLPR::DoDataExchange(CDataExchange* pDX)
@@ -73,6 +77,7 @@ BEGIN_MESSAGE_MAP(CTriggerLPR, CDialog)
 	ON_WM_PAINT()
 	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_L1, OnL1)
+    ON_BN_CLICKED(IDC_L2, OnL2)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -90,7 +95,7 @@ BOOL CTriggerLPR::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	
-    for(int i=1; i<=2;i++) {
+    for(int i=1; i<=4;i++) {
         CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
         previewWnd->GetWindowRect(PreviewRect[i]);
@@ -107,7 +112,7 @@ BOOL CTriggerLPR::OnInitDialog()
 void CTriggerLPR::OnPaint() 
 {
     CPaintDC dc(this); // device context for painting
-    for(int i=1; i<=2;i++) {
+    for(int i=1; i<=4;i++) {
 		CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
 
@@ -144,36 +149,28 @@ void CTriggerLPR::OnTimer(UINT nIDEvent)
                  s.Format("%s",plateno1);
                  SetDlgItemText(IDC_L1,s);
              }
+
+             plateno2 = m_strExternalInfo2;
+             if(plateno2.GetLength()>2) {
+                 s.Format("%s",plateno2);
+                 SetDlgItemText(IDC_L2,s);
+             }
              
              // Load the external images
-             if (no == 1)
-             {
-                 // Camera 1 (LPR): 
-                 // Image 1 (Full) -> Preview 1
-                 // Image 2 (Crop) -> Preview 2
-                 if (!m_strExternalImage.IsEmpty())
-                 {
-                    if(m_jpg[1].Load(m_strExternalImage)) {
-                        InvalidateRect(PreviewRect[1]);
-                    }
-                 }
-                 if (!m_strExternalImage2.IsEmpty())
-                 {
-                    if(m_jpg[2].Load(m_strExternalImage2)) {
-                        InvalidateRect(PreviewRect[2]);
-                    }
-                 }
+             // Load the external images from both cameras
+             // Cam A: Crop -> m_jpg[1], Full -> m_jpg[2]
+             // Cam B: Crop -> m_jpg[3], Full -> m_jpg[4]
+             if (!m_strExternalImage.IsEmpty()) {
+                 if(m_jpg[1].Load(m_strExternalImage)) InvalidateRect(PreviewRect[1]);
              }
-             else if (no == 2)
-             {
-                 // Camera 2 (Container):
-                 // Image 1 (Full) -> Preview 2 (Standard slot for Cam 2)
-                 if (!m_strExternalImage.IsEmpty())
-                 {
-                    if(m_jpg[2].Load(m_strExternalImage)) {
-                        InvalidateRect(PreviewRect[2]);
-                    }
-                 }
+             if (!m_strExternalImage2.IsEmpty()) {
+                 if(m_jpg[2].Load(m_strExternalImage2)) InvalidateRect(PreviewRect[2]);
+             }
+             if (!m_strExternalImage3.IsEmpty()) {
+                 if(m_jpg[3].Load(m_strExternalImage3)) InvalidateRect(PreviewRect[3]);
+             }
+             if (!m_strExternalImage4.IsEmpty()) {
+                 if(m_jpg[4].Load(m_strExternalImage4)) InvalidateRect(PreviewRect[4]);
              }
              
              iStep+=3;
@@ -251,10 +248,14 @@ void CTriggerLPR::Save2loglpr(const char *plateno1,int no)
 
 void CTriggerLPR::OnL1() 
 {
-
     plateno = plateno1;
 	CDialog::OnOK();
-	
+}
+
+void CTriggerLPR::OnL2() 
+{
+    plateno = plateno2;
+	CDialog::OnOK();
 }
 
 void CTriggerLPR::OnManual(int no)

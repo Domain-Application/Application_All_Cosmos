@@ -92,6 +92,7 @@ UINT PhotoThreadProc(LPVOID pParam)
     CString plateno1;
     int option = 3;
     
+    //TODO: fix this for camera 1 and camera 3 mapping to license plate
     for(int i=1; i<=p->TotalCameras; i++) {
         CString ActualFile;
 		ActualFile.Format("%s\\plate0%d.jpg",CString(p->picFolder),i);
@@ -176,7 +177,7 @@ BOOL CSecurity::OnInitDialog()
     SetTimer(1,100,NULL);
     SetTimer(3, 200, NULL);
     SetupIcons();
-    for(int i=1; i<=5;i++) {
+    for(int i=1; i<=8;i++) {
         CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
         previewWnd->GetWindowRect(PreviewRect[i]);
@@ -397,190 +398,135 @@ long ExtractMultipartImage(char* pBuf, DWORD dwTotalSize, const char* pszFilenam
 
 void CSecurity::ProcessCameraRequest(int nIndex)
 {
-	CString strFullImgPath, strCropImgPath;
-    strFullImgPath.Format("%s\\detectionPicture_%d.jpg", app->picFolder, nIndex);
-    strCropImgPath.Format("%s\\plate01.jpg", app->picFolder);
-	if(nIndex == 1)
-	{
-        ::DeleteFile(strFullImgPath);
-		::DeleteFile(strCropImgPath);
-	}
-	else
-	{
-		::DeleteFile(strFullImgPath);
-	}
     CMenuApp* app = (CMenuApp*)AfxGetApp();
+    CString strResultNumA, strResultNumB, title;
     
-    CInternetSession session("HikvisionClient");
-    CHttpConnection* pConnection = NULL;
-    CHttpFile* pFile = NULL;
-    
-    char* pBuf = NULL;
-    DWORD dwTotalSize = 0;
+    // Paths for up to 2 cameras (Cam A and Cam B)
+    CString strCamACrop, strCamAFull;
+    CString strCamBCrop, strCamBFull;
 
-    CString cameraIP, cameraUserName, cameraPassword;
-    CString strCamCode;
-    strCamCode.Format("0%d", nIndex);
-    
-    lset(camera.dat[1], strCamCode);
-    if(qd(camera.dat[1], &camera) == 0) return;
-    
-    cameraIP = camera.dat[GetDbFieldNo(&camera, "IPADD")];
-    cameraUserName = camera.dat[GetDbFieldNo(&camera, "USER")];
-    cameraPassword = camera.dat[GetDbFieldNo(&camera, "PASSWORD")];
-	cameraIP.TrimRight();
-	cameraUserName.TrimRight();
-	cameraPassword.TrimRight();
+    int camIdxA = (nIndex == 1) ? 1 : 2;
+    int camIdxB = (nIndex == 1) ? 3 : 4;
 
-    try
+    int camIndices[2] = {camIdxA, camIdxB};
+    for (int k = 0; k < 2; k++)
     {
-        pConnection = session.GetHttpConnection(cameraIP, INTERNET_DEFAULT_HTTP_PORT, cameraUserName, cameraPassword);
-        pFile = pConnection->OpenRequest(CHttpConnection::HTTP_VERB_GET, "/ISAPI/Traffic/MNPR/channels/1", 
-                                         NULL, 1, NULL, NULL, 
-                                         INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_KEEP_CONNECTION);
-        pFile->SendRequest();
-        
-        DWORD dwRet;
-        pFile->QueryInfoStatusCode(dwRet);
-        
-        if (dwRet == HTTP_STATUS_OK)
-        {
-            DWORD dwContentLength = 0;
-            CString strLen;
-            if (pFile->QueryInfo(HTTP_QUERY_CONTENT_LENGTH, strLen))
-                dwContentLength = _ttol(strLen);
-            
-            DWORD dwBufSize = (dwContentLength > 0) ? (dwContentLength + 1024) : 2097152; 
-            pBuf = new char[dwBufSize];
-            
-            char* pCurr = pBuf;
-            while (dwTotalSize < dwBufSize)
-            {
-                 DWORD dwBytesLeft = dwBufSize - dwTotalSize;
-                 DWORD dwBytesToRead = (dwBytesLeft < 8192) ? dwBytesLeft : 8192;
-                 UINT nRead = pFile->Read(pCurr, dwBytesToRead);
-                 if (nRead == 0) break;
-                 dwTotalSize += nRead;
-                 pCurr += nRead;
-            }
-        }
-    }
-    catch (CInternetException* pEx)
-    {
-        pEx->Delete();
-    }
-
-    if (dwTotalSize > 0 && pBuf)
-    {
-        // Parsing Logic
-        CString strContent;
-        int nTextLen = (dwTotalSize > 20000) ? 20000 : (int)dwTotalSize;
-        char* pTemp = new char[nTextLen + 1];
-        memcpy(pTemp, pBuf, nTextLen);
-        pTemp[nTextLen] = 0;
-        strContent = pTemp;
-        delete[] pTemp;
-
-        CString strResultNum;
-        CRect cropRect(0,0,0,0);
-        bool bHasCropRect = false;
-
-        CString strPlate, strContainer;
-        int res = ProcessAnprXml(strContent, strPlate, strContainer);
-
-        if (nIndex == 1 && (res & ANPR_RESULT_PLATE))
-        {
-            strResultNum = strPlate;
-        }
-        else if (nIndex == 2 && (res & ANPR_RESULT_CONTAINER))
-        {
-            strResultNum = strContainer;
-        }
-
-        if (!strResultNum.IsEmpty())
-        {
-             strResultNum.TrimRight(); strResultNum.TrimLeft();
-             if (nIndex==1) m_vehicle = strResultNum;
-             if (nIndex==2) m_contno = strResultNum;
-        }
-
-        // Image Handling
+        int currentCam = camIndices[k];
         CString strFullImgPath, strCropImgPath;
-        strFullImgPath.Format("%s\\detectionPicture_%d.jpg", app->picFolder, nIndex);
-        strCropImgPath.Format("%s\\plate01.jpg", app->picFolder);
-        
-        // 1. Always try to save detectionPicture.jpg (Full Context)
-        ExtractMultipartImage(pBuf, dwTotalSize, "detectionPicture.jpg", strFullImgPath);
+        strFullImgPath.Format("%s\\detectionPicture_%d.jpg", app->picFolder, currentCam);
+        strCropImgPath.Format("%s\\plate0%d.jpg", app->picFolder, currentCam);
+        ::DeleteFile(strFullImgPath);
+        ::DeleteFile(strCropImgPath);
 
-        bool bCropSaved = false;
+        CString cameraIP, cameraUserName, cameraPassword;
+        CString strCamCode;
+        strCamCode.Format("0%d", currentCam);
         
-        if (nIndex == 1)
-        {
-            // For LPR, try to extract licensePlatePicture.jpg directly
-            if (ExtractMultipartImage(pBuf, dwTotalSize, "licensePlatePicture.jpg", strCropImgPath) > 0)
-            {
-                bCropSaved = true;
+        lset(camera.dat[1], strCamCode);
+        if(qd(camera.dat[1], &camera) == 0) continue;
+        
+        cameraIP = camera.dat[GetDbFieldNo(&camera, "IPADD")];
+        cameraUserName = camera.dat[GetDbFieldNo(&camera, "USER")];
+        cameraPassword = camera.dat[GetDbFieldNo(&camera, "PASSWORD")];
+        cameraIP.TrimRight();
+        cameraUserName.TrimRight();
+        cameraPassword.TrimRight();
+
+        CInternetSession session("HikvisionClient");
+        CHttpConnection* pConnection = NULL;
+        CHttpFile* pFile = NULL;
+        char* pBuf = NULL;
+        DWORD dwTotalSize = 0;
+
+        try {
+            pConnection = session.GetHttpConnection(cameraIP, INTERNET_DEFAULT_HTTP_PORT, cameraUserName, cameraPassword);
+            pFile = pConnection->OpenRequest(CHttpConnection::HTTP_VERB_GET, "/ISAPI/Traffic/MNPR/channels/1", 
+                                             NULL, 1, NULL, NULL, 
+                                             INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE | INTERNET_FLAG_KEEP_CONNECTION);
+            pFile->SendRequest();
+            DWORD dwRet;
+            pFile->QueryInfoStatusCode(dwRet);
+            
+            if (dwRet == HTTP_STATUS_OK) {
+                DWORD dwBufSize = 2097152; // 2MB
+                pBuf = new char[dwBufSize];
+                char* pCurr = pBuf;
+                while (dwTotalSize < dwBufSize) {
+                     DWORD dwBytesToRead = (dwBufSize - dwTotalSize < 8192) ? (dwBufSize - dwTotalSize) : 8192;
+                     UINT nRead = pFile->Read(pCurr, dwBytesToRead);
+                     if (nRead == 0) break;
+                     dwTotalSize += nRead;
+                     pCurr += nRead;
+                }
+            }
+        } catch (CInternetException* pEx) { pEx->Delete(); }
+
+        if (dwTotalSize > 0 && pBuf) {
+            CString strContent;
+            int nTextLen = (dwTotalSize > 20000) ? 20000 : (int)dwTotalSize;
+            char* pTemp = new char[nTextLen + 1];
+            memcpy(pTemp, pBuf, nTextLen);
+            pTemp[nTextLen] = 0;
+            strContent = pTemp;
+            delete[] pTemp;
+
+            CString strPlate, strContainer;
+            int res = ProcessAnprXml(strContent, strPlate, strContainer);
+
+            if (nIndex == 1 && (res & ANPR_RESULT_PLATE)) {
+                if (k == 0) strResultNumA = strPlate;
+                else strResultNumB = strPlate;
+                title = _T("Trigger License Plate Recognition");
+            } else if (nIndex == 2 && (res & ANPR_RESULT_CONTAINER)) {
+                if (k == 0) strResultNumA = strContainer;
+                else strResultNumB = strContainer;
+                title = _T("Trigger Container Number Recognition");
+            }
+
+            // Save images
+            ExtractMultipartImage(pBuf, dwTotalSize, "detectionPicture.jpg", strFullImgPath);
+            ExtractMultipartImage(pBuf, dwTotalSize, "licensePlatePicture.jpg", strCropImgPath);
+
+            if (k == 0) {
+                strCamACrop = strCropImgPath;
+                strCamAFull = strFullImgPath;
+            } else {
+                strCamBCrop = strCropImgPath;
+                strCamBFull = strFullImgPath;
             }
         }
-        
-        // Match display logic:
-        // Index 1: Pass Full (img1) and Crop (img2)
-        // Index 2: Pass Full (img1) only
-        
-        CTriggerLPR h;
-        h.no = nIndex;
-        
-        if (nIndex == 1)
-        {
-             h.SetExternalData(strResultNum, strCropImgPath, strFullImgPath);
-        }
-        else
-        {
-             h.SetExternalData(strResultNum, strFullImgPath);
-        }
-        
-        UINT ID = h.DoModal();
-        if(ID != IDCANCEL)
-        {
-            if (nIndex==1) {
-                 m_vehicle = h.plateno;
-                 SetDlgItemText(IDC_L1, m_vehicle);
-                 CString strFinalSave = strFullImgPath;
-                 
-                 if (m_jpg[1].Load(strFinalSave)) {
-                     InvalidateRect(PreviewRect[1]);
-                     CopyFile(strFinalSave, pView->strPhoto[1], FALSE);
-                 }
-				 CString picPlate, pic_Path;
-        		 picPlate.Format("plate01.jpg");
-        		 pic_Path.Format("%s\\%s", app->picFolder, picPlate);
-                 
-            	 if(m_jpg[4].Load( pic_Path )) {
-            		 InvalidateRect( PreviewRect[4] );
-				 }
-                 else
-                 {
-                     m_jpg[4].Load(""); 
-                     InvalidateRect( PreviewRect[4] );
-                 }
-            }
-            if (nIndex==2) {
-                 m_contno = h.plateno;
-                 SetDlgItemText(IDC_L2, m_contno);
-                 if (m_jpg[2].Load(strFullImgPath)) {
-                     InvalidateRect(PreviewRect[2]);
-                     CopyFile(strFullImgPath, pView->strPhoto[2], FALSE);
-                 }
-                 
-            }
-            UpdateData(FALSE);
-        }
+
+        if (pBuf) delete[] pBuf;
+        if (pFile) { pFile->Close(); delete pFile; }
+        if (pConnection) { pConnection->Close(); delete pConnection; }
+        session.Close();
     }
 
-    if (pBuf) delete[] pBuf;
-    if(pFile) { pFile->Close(); delete pFile; }
-    if(pConnection) { pConnection->Close(); delete pConnection; }
-    session.Close();
+    CTriggerLPR h;
+    h.no = nIndex;
+    h.SetExternalData(strResultNumA, strResultNumB, strCamACrop, strCamAFull, strCamBCrop, strCamBFull);
+    
+    UINT ID = h.DoModal();
+    if(ID != IDCANCEL)
+    {
+        if (nIndex == 1) {
+             m_vehicle = h.plateno;
+             SetDlgItemText(IDC_L1, m_vehicle);
+             if (m_jpg[1].Load(strCamAFull)) InvalidateRect(PreviewRect[1]);
+             if (m_jpg[5].Load(strCamACrop)) InvalidateRect(PreviewRect[5]);
+             if (m_jpg[3].Load(strCamBFull)) InvalidateRect(PreviewRect[3]);
+             if (m_jpg[6].Load(strCamBCrop)) InvalidateRect(PreviewRect[6]);
+        }
+        if (nIndex == 2) {
+             m_contno = h.plateno;
+             SetDlgItemText(IDC_L2, m_contno);
+             if (m_jpg[2].Load(strCamAFull)) InvalidateRect(PreviewRect[2]);
+             if (m_jpg[7].Load(strCamACrop)) InvalidateRect(PreviewRect[7]);
+             if (m_jpg[4].Load(strCamBFull)) InvalidateRect(PreviewRect[4]);
+             if (m_jpg[8].Load(strCamBCrop)) InvalidateRect(PreviewRect[8]);
+        }
+        UpdateData(FALSE);
+    }
 }
 
 void CSecurity::OnButton1() 
@@ -644,7 +590,6 @@ void CSecurity::OnTakePhotos()
 
 LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
 {
-    BOOL useThisLPRPicture = FALSE;
     int i = (int)wParam;
     if (i == 0) {
         UpdateData(FALSE);
@@ -660,8 +605,8 @@ LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
                 if (IsMalaysiaPlate(*pStr)) {
                     m_vehicle = *pStr;
                     SetDlgItemText(IDC_L1, m_vehicle);
-                    useThisLPRPicture = TRUE;
                 }
+                // Allow display even if it doesn't match a standard plate (or maybe always true for camera 3?)
             } else if (i == 2 || i == 4) {
                 if(ValidateISO6346(*pStr)) {    
                     m_contno = *pStr;
@@ -671,20 +616,22 @@ LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
         }
         delete pStr;
     }
-    if( (i == 1 || i == 3) && useThisLPRPicture) {
+    if(i == 1 || i == 3) {
         CString picPlate, pic_Path;
-        picPlate.Format("plate01.jpg");
+        picPlate.Format("plate0%d.jpg", i);
         pic_Path.Format("%s\\%s", app->picFolder, picPlate);
-        if(m_jpg[4].Load( pic_Path )) {
-             InvalidateRect( PreviewRect[4] );
+        int idx = i == 1 ? 5 : 6;
+        if(m_jpg[idx].Load( pic_Path )) {
+             InvalidateRect( PreviewRect[idx] );
         }
     }
     else if (i == 2) {
         CString picPlate, pic_Path;
         picPlate.Format("plate%2.2i.jpg", i);
         pic_Path.Format("%s\\%s", app->picFolder, picPlate);
-        if(m_jpg[5].Load( pic_Path )) {
-             InvalidateRect( PreviewRect[5] );
+        int idx = i == 2 ? 7 : 8;
+        if(m_jpg[idx].Load( pic_Path )) {
+             InvalidateRect( PreviewRect[idx] );
         }
     }
     CString file = pView->strPhoto[i];
@@ -698,7 +645,7 @@ LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
 void CSecurity::OnPaint() 
 {
     CPaintDC dc(this);
-    for(int i=1; i<=5;i++) {
+    for(int i=1; i<=8;i++) {
 		CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
 		m_jpg[i].Draw(&dc,PreviewRect[i].left,PreviewRect[i].top,

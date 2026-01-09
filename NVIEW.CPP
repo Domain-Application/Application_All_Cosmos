@@ -431,7 +431,6 @@ void CNView::ShowInitFrame()
     fg.SetTitle("AC Name",3600,1);
     fg.SetTitle("Product",2600,1);
 
-    fg.SetTitle("Prime Mover",1200,1);
     fg.SetTitle("Date/Time In",1500,4);
     fg.SetTitle("Weight (kg)",1100,7);
     fg.SetTitle("Ticket",1,1);
@@ -439,7 +438,6 @@ void CNView::ShowInitFrame()
     fg.SetTitle("W. Type",870,4);
     fg.SetTitle("Remarks", 3000, 1);
 	
-
 	MGRID fg2(&m_grid2, NULL, 0, 5);
     fg2.SetTitle("No", 500, 1);
 	fg2.SetTitle("Ticket",1300,1);
@@ -453,7 +451,7 @@ void CNView::SetActiveStatus(DB *df,long rec, int type)
 	if(type == 1)
 	{
 		MGRID g(&m_grid,df,rec);
-		g.SetText(df,0,LORRY,ACCODE | 0x100,PT | 0x100, PM1NO,TIMEIN,FIRST,1,-1);
+		g.SetText(df,0,LORRY,ACCODE | 0x100,PT | 0x100,TIMEIN,FIRST,1,-1);
 		
 		int fld = GetDbFieldNo(df ,_szPrintCounter);
 		int no = df->lval(fld);

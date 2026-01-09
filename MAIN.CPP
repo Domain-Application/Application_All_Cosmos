@@ -82,13 +82,13 @@ int CMenuApp::SubProgram(int key)
     case M_CTRL*10+8:
         AdminDb(&warehouse);
         break;
-    case M_CTRL*10+91:
+    case 291:
         AdminDb(&unit);
         break;
-    case M_CTRL*10+92:
+    case 292:
         AdminDb(&container);
         break;
-    case M_CTRL*10+93:
+    case 293:
         AdminDb(&trailer);
         break;
     case M_OTHER*10+2:
@@ -105,6 +105,9 @@ int CMenuApp::SubProgram(int key)
         break;
     case M_OTHER*10+6:
         CleanDatabase();
+        break;
+    case M_OTHER*10+7:
+       weighbridge.Run();
         break;
     default:
          return 0;

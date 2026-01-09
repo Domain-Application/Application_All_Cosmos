@@ -20,7 +20,8 @@ public:
     void OnManual(int no);
 	void Save2loglpr(const char *plateno1,int no);
     // New method for external data
-    void SetExternalData(CString strInfo, CString strImage, CString strImage2 = "");
+    // Updated method for external data from dual cameras
+    void SetExternalData(CString strInfo1, CString strInfo2, CString strImage1, CString strImage2 = "", CString strImage3 = "", CString strImage4 = "");
 
     int iStep,oldwt,iCounter,busy,lpr_status[9];
     int direction,iTryCount;
@@ -34,8 +35,11 @@ public:
     // New members
     BOOL m_bUseExternalData;
     CString m_strExternalInfo;
+    CString m_strExternalInfo2;
     CString m_strExternalImage;
     CString m_strExternalImage2;
+    CString m_strExternalImage3;
+    CString m_strExternalImage4;
 
 // Dialog Data
 	//{{AFX_DATA(CTriggerLPR)
@@ -63,6 +67,7 @@ protected:
 	virtual void OnOK();
 	virtual void OnCancel();
 	afx_msg void OnL1();
+	afx_msg void OnL2();
 	afx_msg void OnButton1();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()

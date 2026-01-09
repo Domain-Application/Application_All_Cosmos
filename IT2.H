@@ -8,6 +8,7 @@
 //
 
 #include "fedit.h"
+#include "msflexgrid.h"
 /////////////////////////////////////////////////////////////////////////////
 // CIt2 dialog
 
@@ -19,6 +20,10 @@ public:
 	 virtual void LoadImages();     
      int iType;
      CString m_vehicle,m_contno,m_tt,msg;
+     CMSFlexGrid m_grid1;
+     virtual void ShowInitFrame();
+     virtual void OnRefresh();
+     virtual void ReplaceSubGrid(long rec,long irec,CMSFlexGrid *m_grid,DB *sub,int IdxItem);
 // Dialog Data
      //{{AFX_DATA(CIt2)
      enum { IDD = IDD_IT2 };

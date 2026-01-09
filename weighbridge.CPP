@@ -123,16 +123,16 @@ void CWeighbridge::OnChangeWeighbridgeMode()
 
 void CWeighbridge::SetAttribute(int flag, int fld)
 {
-  if(flag)
-  {
-    GetDlgItem(IDC_BUTTON1)->ShowWindow(SW_SHOW);
-	GetDlgItem(IDC_BUTTON2)->ShowWindow(SW_SHOW);
-  }
-  else
-  {
-    GetDlgItem(IDC_BUTTON1)->ShowWindow(SW_HIDE);
-	GetDlgItem(IDC_BUTTON2)->ShowWindow(SW_HIDE);
-  }
+  // if(flag)
+  // {
+  //   GetDlgItem(IDC_BUTTON1)->ShowWindow(SW_SHOW);
+	// GetDlgItem(IDC_BUTTON2)->ShowWindow(SW_SHOW);
+  // }
+  // else
+  // {
+  //   GetDlgItem(IDC_BUTTON1)->ShowWindow(SW_HIDE);
+	// GetDlgItem(IDC_BUTTON2)->ShowWindow(SW_HIDE);
+  // }
   CStaff::ShowInformation();
 }
 
