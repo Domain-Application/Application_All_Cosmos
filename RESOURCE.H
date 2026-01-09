@@ -300,6 +300,7 @@
 #define IDC_CONT_IN_YARD                1256
 #define IDC_S2                          1256
 #define IDC_BIN_IN_YARD                 1257
+#define IDC_TANK_IN_YARD                1257
 #define IDC_MODELABEL                   1258
 #define IDC_BR2                         1259
 #define IDC_BR1                         1260

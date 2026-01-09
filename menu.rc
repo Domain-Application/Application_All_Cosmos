@@ -415,7 +415,7 @@ END
 
 IDD_MENU_FORM DIALOGEX 0, 0, 922, 445
 STYLE WS_CHILD | WS_BORDER
-FONT 10, "MS Serif", 0, 0, 0x1
+FONT 10, "MS Serif"
 BEGIN
     PUSHBUTTON      "Detail Report",ID00011,28,42,113,16,BS_LEFT
     PUSHBUTTON      "Detail Report",ID00012,28,72,113,16,BS_LEFT
@@ -442,16 +442,15 @@ BEGIN
                     250,544,111
     LISTBOX         IDC_LIST1,20,389,109,51,LBS_NOINTEGRALHEIGHT | NOT 
                     WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Tanker In Yard:",IDC_STATIC,20,366,63,12
-    LTEXT           "",IDC_CONT_IN_YARD,425,362,44,12
+    LTEXT           "Tanker In Yard:",IDC_STATIC,358,363,63,12
+    LTEXT           "",IDC_CONT_IN_YARD,89,363,44,12
     CONTROL         "",IDC_MODELABEL,"{978C9E23-D4B0-11CE-BF2D-00AA003F40D0}",
                     0x0,148,19,113,13
     CONTROL         "",IDC_MSFLEXGRID2,
                     "{6262D3A0-531B-11CF-91F6-C2863C385E30}",WS_TABSTOP,20,
                     250,319,111
-    LTEXT           "Container In Yard:",IDC_STATIC,356,362,63,12
-    LTEXT           "",IDC_BIN_IN_YARD,85,366,44,12,NOT WS_VISIBLE | 
-                    WS_DISABLED
+    LTEXT           "Container In Yard:",IDC_STATIC,20,363,63,12
+    LTEXT           "",IDC_TANK_IN_YARD,423,363,44,12
     LTEXT           "",IDC_PREVIEW4,356,127,261,111,0,WS_EX_STATICEDGE
 END
 
@@ -1653,7 +1652,7 @@ BEGIN
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "menu.EXE\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "WB01\0"
+            VALUE "ProductName", "WB00\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
             VALUE "SpecialBuild", "\0"
         END

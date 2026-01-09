@@ -509,6 +509,8 @@ void CNView::ShowInformation()
     SetDlgItemText(IDC_TOTAL_VEHICLE_IN_YARD,str);
     strSQL.Format("select Final_Count from Container_In_Yard");
     SetDlgItemText(IDC_CONT_IN_YARD, SqlText(strSQL));
+    strSQL.Format("select count(*) from first where container is null");
+    SetDlgItemText(IDC_TANK_IN_YARD, SqlText(strSQL));
     m_swGrid = FALSE;
 }
 
