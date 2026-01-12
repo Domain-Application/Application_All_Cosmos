@@ -73,20 +73,20 @@ BOOL CPMWeighing::OnInitDialog()
     else{
         CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO2);
     }
-	if(hideShuntingLorryFlag) {
-		GetDlgItem(IDC_EDIT15)->ShowWindow(SW_HIDE);
-	}
-	else
-	{
-		GetDlgItem(IDC_EDIT15)->ShowWindow(SW_SHOW);
-	}
-	if(hideRoRoFlag) {
-		GetDlgItem(IDC_EDIT16)->ShowWindow(SW_HIDE);
-	}
-	else
-	{
-		GetDlgItem(IDC_EDIT16)->ShowWindow(SW_SHOW);
-	}
+	// if(hideShuntingLorryFlag) {
+	// 	GetDlgItem(IDC_EDIT15)->ShowWindow(SW_HIDE);
+	// }
+	// else
+	// {
+	// 	GetDlgItem(IDC_EDIT15)->ShowWindow(SW_SHOW);
+	// }
+	// if(hideRoRoFlag) {
+	// 	GetDlgItem(IDC_EDIT16)->ShowWindow(SW_HIDE);
+	// }
+	// else
+	// {
+	// 	GetDlgItem(IDC_EDIT16)->ShowWindow(SW_SHOW);
+	// }
 	SetTimer(1,250,NULL);
 	
 	return TRUE;  // return TRUE unless you set the focus to a control

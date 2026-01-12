@@ -1652,7 +1652,7 @@ BEGIN
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "menu.EXE\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "WB00\0"
+            VALUE "ProductName", "WB01\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
             VALUE "SpecialBuild", "\0"
         END
