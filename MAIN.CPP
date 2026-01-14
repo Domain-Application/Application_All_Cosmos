@@ -109,6 +109,9 @@ int CMenuApp::SubProgram(int key)
     case M_OTHER*10+7:
        weighbridge.Run();
         break;
+    case M_OTHER*10+8:
+       camera.Run();
+        break;
     default:
          return 0;
     }

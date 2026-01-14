@@ -144,6 +144,7 @@ BEGIN
         MENUITEM "3&5 Company Profile",         ID00035
         MENUITEM "3&6 Reset Database",          ID00036
         MENUITEM "3&7 Weighbridge Profile",     ID00037
+        MENUITEM "3&8. Camera Profile",         ID00038
     END
 END
 

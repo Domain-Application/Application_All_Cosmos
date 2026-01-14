@@ -193,64 +193,64 @@ BOOL CWb::OnInitDialog()
     //return FALSE;
 #endif //_DEBUG
 
-    strcpy(cmd1,"W1");
-    strcpy(cmd2,"W2");
-    strWM = profile.dat[Pro_WtServer];
-    strWM.TrimRight();
-	int offset = instr(1, strWM, ",");
-	if(offset==0) {
-        strWM2 = strWM;
-	}
-    else {
-        char szTmp[10000];
+    // strcpy(cmd1,"W1");
+    // strcpy(cmd2,"W2");
+    // strWM = profile.dat[Pro_WtServer];
+    // strWM.TrimRight();
+	// int offset = instr(1, strWM, ",");
+	// if(offset==0) {
+    //     strWM2 = strWM;
+	// }
+    // else {
+    //     char szTmp[10000];
 
-        strcpy(szTmp, strWM);
-        szTmp[offset-1] = 0;
-        strWM  = szTmp;
-        strWM2 = &szTmp[offset];
-        strcpy(cmd2,"W1");
-    }
+    //     strcpy(szTmp, strWM);
+    //     szTmp[offset-1] = 0;
+    //     strWM  = szTmp;
+    //     strWM2 = &szTmp[offset];
+    //     strcpy(cmd2,"W1");
+    // }
 
-    int flag1 = ClientRequest(strWM, cmd1 , errmsg);
-    if(flag1==-1) {
-        strWM = "";
-        CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO2);
-        GetDlgItem(IDC_RADIO1)->EnableWindow(FALSE);
-        GetDlgItem(IDC_WB1)->EnableWindow(FALSE);
-    }
-    else {
-        SetDlgItemText(IDC_WB1, strWM);
-    }
+    // int flag1 = ClientRequest(strWM, cmd1 , errmsg);
+    // if(flag1==-1) {
+    //     strWM = "";
+    //     CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO2);
+    //     GetDlgItem(IDC_RADIO1)->EnableWindow(FALSE);
+    //     GetDlgItem(IDC_WB1)->EnableWindow(FALSE);
+    // }
+    // else {
+    //     SetDlgItemText(IDC_WB1, strWM);
+    // }
 
-    int flag2 = ClientRequest(strWM2, cmd2 , errmsg);
-    if(flag2==-1) {
-        strWM2 = "";
-        CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO1);
-        GetDlgItem(IDC_RADIO2)->EnableWindow(FALSE);
-        GetDlgItem(IDC_WB2)->EnableWindow(FALSE);
-    }
-    else {
-        SetDlgItemText(IDC_WB2, strWM2);
-    }
+    // int flag2 = ClientRequest(strWM2, cmd2 , errmsg);
+    // if(flag2==-1) {
+    //     strWM2 = "";
+    //     CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO1);
+    //     GetDlgItem(IDC_RADIO2)->EnableWindow(FALSE);
+    //     GetDlgItem(IDC_WB2)->EnableWindow(FALSE);
+    // }
+    // else {
+    //     SetDlgItemText(IDC_WB2, strWM2);
+    // }
 
-    if(flag2==-1 && flag1==-1) {
-        MessageBox("Weight server not found");
-        OnCancel();
-        return TRUE;
-    }
-    else if(flag2==0 && flag1==0) {
-        if(app->m_strComputerName.CompareNoCase(strWM)==0) {
-            CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO1);
-        }
-        else if(app->m_strComputerName.CompareNoCase(strWM2)==0) {
-            CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO2);
-        }
-        else {
-            CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO1+current_indicator-1);
-        }
-    }
+    // if(flag2==-1 && flag1==-1) {
+    //     MessageBox("Weight server not found");
+    //     OnCancel();
+    //     return TRUE;
+    // }
+    // else if(flag2==0 && flag1==0) {
+    //     if(app->m_strComputerName.CompareNoCase(strWM)==0) {
+    //         CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO1);
+    //     }
+    //     else if(app->m_strComputerName.CompareNoCase(strWM2)==0) {
+    //         CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO2);
+    //     }
+    //     else {
+    //         CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO1+current_indicator-1);
+    //     }
+    // }
 
-    SetTimer(1,500,NULL);
+    // SetTimer(1,500,NULL);
     return TRUE;  // return TRUE unless you set the focus to a control
                   // EXCEPTION: OCX Property Pages should return FALSE
 }
