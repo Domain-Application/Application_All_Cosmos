@@ -40,8 +40,6 @@ public:
     CString m_strExternalImage2;
     CString m_strExternalImage3;
     CString m_strExternalImage4;
-	CString m_strExternalImage9;
-    CString m_strExternalImage10;
 
 // Dialog Data
 	//{{AFX_DATA(CTriggerLPR)

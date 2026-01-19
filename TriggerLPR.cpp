@@ -61,8 +61,6 @@ void CTriggerLPR::SetExternalData(CString strInfo1, CString strInfo2, CString st
     m_strExternalImage2 = strImage2;
     m_strExternalImage3 = strImage3;
     m_strExternalImage4 = strImage4;
-	m_strExternalImage9 = strImage9;
-	m_strExternalImage10 = strImage10;
 }
 
 void CTriggerLPR::DoDataExchange(CDataExchange* pDX)
@@ -173,12 +171,6 @@ void CTriggerLPR::OnTimer(UINT nIDEvent)
              }
              if (!m_strExternalImage4.IsEmpty()) {
                  if(m_jpg[4].Load(m_strExternalImage4)) InvalidateRect(PreviewRect[4]);
-             }
-             if (!m_strExternalImage4.IsEmpty()) {
-                 if(m_jpg[9].Load(m_strExternalImage4)) InvalidateRect(PreviewRect[9]);
-             }
-			 if (!m_strExternalImage4.IsEmpty()) {
-                 if(m_jpg[10].Load(m_strExternalImage4)) InvalidateRect(PreviewRect[10]);
              }
              iStep+=3;
              busy = 0;
