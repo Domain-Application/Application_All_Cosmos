@@ -233,8 +233,10 @@ BOOL CSecurity::OnSecond(BOOL LPR_Status, BOOL CNR_Status)
 	CString strSQL;
 	if(m_contno.GetLength()==11) {
 		lset(df->dat[WB_Container], m_contno);
-        lset(df->dat[LORRY], m_vehicle);
+        //lset(df->dat[LORRY], m_vehicle);
         lset(lorry.dat[1], m_vehicle);
+
+
         qd(lorry.dat[1], &lorry);
         ltodb(lorry.val(GetDbFieldNo(&lorry, "TARE")), df, PM2WT);
         char szIndicator[2];
@@ -277,9 +279,11 @@ BOOL CSecurity::OnSecond(BOOL LPR_Status, BOOL CNR_Status)
     ltodb(CNR_Status, pf,  GetDbFieldNo(pf, "OUT_CNR_SUCCESS"));
     pf->AddNew();
     IsZeroWt = FALSE;
-    CString msg, normal_report_name, a5_report_name;
+    CString msg, normal_report_name, do_report_name;
     normal_report_name.Format("%s.rpt", pf->name);
+	do_report_name.Format("%sdo.rpt", pf->name);
 	pf->PrintOneFormOnly(normal_report_name);
+	pf->PrintOneFormOnly(do_report_name);
 	s.Format("Delete from [%s] where [%s] = '%s'", df->name, df->fieldName[1], df->dat[1]);
     RunSql(s);
     DB sub_table;

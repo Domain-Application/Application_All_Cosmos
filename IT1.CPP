@@ -126,24 +126,24 @@ void CIt1::OnTimer(UINT nIDEvent)
 BOOL CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
 {
     lsetblank(df);
-
+	long xrec;
+	CString strsql;
 	(*df->e->start)(df);
 
 	m_contno.TrimRight();
-	if(m_contno.GetLength()==11) {
-		lset(df->dat[WB_Container], m_contno);
-		lset(df->dat[LORRY], m_vehicle);
-        lset(df->dat[PM1NO], m_vehicle);
+
+	if(m_contno.GetLength()==11) 
+	{
+		xrec = df->Search(m_contno, WB_Container, TRUE );
 	}
-	else {
-		lset(df->dat[LORRY], m_vehicle);
-        lset(df->dat[PM1NO], "");			//must blank 
+	else
+	{
+		xrec = df->Search(m_vehicle , LORRY, TRUE );
 	}
-	long xrec = df->Search(df->dat[LORRY] , LORRY, TRUE );
+
 	if(xrec) {
 		return OnSecond(LPR_Status, CNR_Status);
 	}
-	
 	
 	if(m_contno.GetLength()==11) {
 		lset(df->dat[WB_Container], m_contno);

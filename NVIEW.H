@@ -93,7 +93,6 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 	virtual void OnInitialUpdate(); // called first time after construct
-		virtual void displaySystemMode();
 	//}}AFX_VIRTUAL
 
 // Implementation
@@ -112,6 +111,7 @@ public:
 	afx_msg void OnClickMsflexgrid1();
 	afx_msg void OnDblClickMsflexgrid1();
 	afx_msg void OnMouseDownMsflexgrid1(short Button, short Shift, long x, long y);
+	afx_msg void OnMouseDownMsflexgrid2(short Button, short Shift, long x, long y);
 	afx_msg LRESULT OnNewMessage(WPARAM wParam, LPARAM lParam);
     afx_msg void OnDestroy();
 	DECLARE_EVENTSINK_MAP()

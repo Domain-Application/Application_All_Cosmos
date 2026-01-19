@@ -248,6 +248,10 @@ SOURCE=.\Export4ASCII.h
 
 SOURCE=.\MENU.H
 # End Source File
+# Begin Source File
+
+SOURCE=.\NVIEW.H
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 
@@ -315,10 +319,24 @@ SOURCE=.\ReadMe.txt
 # End Source File
 # End Target
 # End Project
-# Section menu : {5F4DF280-531B-11CF-91F6-C2863C385E30}
-# 	2:5:Class:CMSFlexGrid
-# 	2:10:HeaderFile:msflexgrid.h
-# 	2:8:ImplFile:msflexgrid.cpp
+# Section menu : {8BD21D13-EC42-11CE-9E0D-00AA006002F3}
+# 	2:5:Class:CMdcText
+# 	2:10:HeaderFile:mdctext.h
+# 	2:8:ImplFile:mdctext.cpp
+# End Section
+# Section menu : {B09DE713-87C1-11D1-8BE3-0000F8754DA1}
+# 	2:5:Class:CAnimation
+# 	2:10:HeaderFile:animation.h
+# 	2:8:ImplFile:animation.cpp
+# End Section
+# Section menu : {978C9E23-D4B0-11CE-BF2D-00AA003F40D0}
+# 	2:21:DefaultSinkHeaderFile:labelcontrol1.h
+# 	2:16:DefaultSinkClass:CLabelControl
+# End Section
+# Section menu : {04598FC4-866C-11CF-AB7C-00AA00C08FCF}
+# 	2:5:Class:CCommandButton
+# 	2:10:HeaderFile:commandbutton.h
+# 	2:8:ImplFile:commandbutton.cpp
 # End Section
 # Section menu : {72ADFD7B-2C39-11D0-9903-00A0C91BC942}
 # 	1:17:ID_INDICATOR_TIME:103
@@ -327,33 +345,33 @@ SOURCE=.\ReadMe.txt
 # 	2:17:ID_INDICATOR_TIME:ID_INDICATOR_TIME
 # 	2:17:ID_INDICATOR_DATE:ID_INDICATOR_DATE
 # End Section
-# Section menu : {BEF6E003-A874-101A-8BBA-00AA00300CAB}
-# 	2:5:Class:COleFont
-# 	2:10:HeaderFile:font1.h
-# 	2:8:ImplFile:font1.cpp
+# Section menu : {5F4DF280-531B-11CF-91F6-C2863C385E30}
+# 	2:5:Class:CMSFlexGrid
+# 	2:10:HeaderFile:msflexgrid.h
+# 	2:8:ImplFile:msflexgrid.cpp
 # End Section
 # Section menu : {6262D3A0-531B-11CF-91F6-C2863C385E30}
 # 	2:21:DefaultSinkHeaderFile:msflexgrid.h
 # 	2:16:DefaultSinkClass:CMSFlexGrid
+# End Section
+# Section menu : {BEF6E003-A874-101A-8BBA-00AA00300CAB}
+# 	2:5:Class:COleFont
+# 	2:10:HeaderFile:font1.h
+# 	2:8:ImplFile:font1.cpp
 # End Section
 # Section menu : {4D6CC9A0-DF77-11CF-8E74-00A0C90F26F8}
 # 	2:5:Class:CMSMask
 # 	2:10:HeaderFile:msmask1.h
 # 	2:8:ImplFile:msmask1.cpp
 # End Section
-# Section menu : {7BF80981-BF32-101A-8BBB-00AA00300CAB}
-# 	2:5:Class:CPicture
-# 	2:10:HeaderFile:picture1.h
-# 	2:8:ImplFile:picture1.cpp
-# End Section
 # Section menu : {D7053240-CE69-11CD-A777-00DD01143C57}
 # 	2:21:DefaultSinkHeaderFile:commandbutton.h
 # 	2:16:DefaultSinkClass:CCommandButton
 # End Section
-# Section menu : {04598FC1-866C-11CF-AB7C-00AA00C08FCF}
-# 	2:5:Class:CLabelControl
-# 	2:10:HeaderFile:labelcontrol1.h
-# 	2:8:ImplFile:labelcontrol1.cpp
+# Section menu : {7BF80981-BF32-101A-8BBB-00AA00300CAB}
+# 	2:5:Class:CPicture
+# 	2:10:HeaderFile:picture1.h
+# 	2:8:ImplFile:picture1.cpp
 # End Section
 # Section menu : {B09DE715-87C1-11D1-8BE3-0000F8754DA1}
 # 	2:21:DefaultSinkHeaderFile:animation.h
@@ -363,10 +381,10 @@ SOURCE=.\ReadMe.txt
 # 	2:21:DefaultSinkHeaderFile:mdctext.h
 # 	2:16:DefaultSinkClass:CMdcText
 # End Section
-# Section menu : {E6E17E90-DF38-11CF-8E74-00A0C90F26F8}
-# 	2:5:Class:CMSComm
-# 	2:10:HeaderFile:mscomm.h
-# 	2:8:ImplFile:mscomm.cpp
+# Section menu : {04598FC1-866C-11CF-AB7C-00AA00C08FCF}
+# 	2:5:Class:CLabelControl
+# 	2:10:HeaderFile:labelcontrol1.h
+# 	2:8:ImplFile:labelcontrol1.cpp
 # End Section
 # Section menu : {648A5600-2C6E-101B-82B6-000000000014}
 # 	2:21:DefaultSinkHeaderFile:mscomm.h
@@ -376,27 +394,13 @@ SOURCE=.\ReadMe.txt
 # 	2:21:DefaultSinkHeaderFile:msmask1.h
 # 	2:16:DefaultSinkClass:CMSMask
 # End Section
+# Section menu : {E6E17E90-DF38-11CF-8E74-00A0C90F26F8}
+# 	2:5:Class:CMSComm
+# 	2:10:HeaderFile:mscomm.h
+# 	2:8:ImplFile:mscomm.cpp
+# End Section
 # Section menu : {9F6AA700-D188-11CD-AD48-00AA003C9CB6}
 # 	2:5:Class:CRowCursor
 # 	2:10:HeaderFile:rowcursor.h
 # 	2:8:ImplFile:rowcursor.cpp
-# End Section
-# Section menu : {04598FC4-866C-11CF-AB7C-00AA00C08FCF}
-# 	2:5:Class:CCommandButton
-# 	2:10:HeaderFile:commandbutton.h
-# 	2:8:ImplFile:commandbutton.cpp
-# End Section
-# Section menu : {978C9E23-D4B0-11CE-BF2D-00AA003F40D0}
-# 	2:21:DefaultSinkHeaderFile:labelcontrol1.h
-# 	2:16:DefaultSinkClass:CLabelControl
-# End Section
-# Section menu : {B09DE713-87C1-11D1-8BE3-0000F8754DA1}
-# 	2:5:Class:CAnimation
-# 	2:10:HeaderFile:animation.h
-# 	2:8:ImplFile:animation.cpp
-# End Section
-# Section menu : {8BD21D13-EC42-11CE-9E0D-00AA006002F3}
-# 	2:5:Class:CMdcText
-# 	2:10:HeaderFile:mdctext.h
-# 	2:8:ImplFile:mdctext.cpp
 # End Section

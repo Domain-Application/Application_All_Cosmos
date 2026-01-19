@@ -324,7 +324,6 @@ void CNView::OnInitialUpdate()
     CCctvView::OnInitialUpdate();
     pView = this;
 	SetDlgItemText(IDC_TEXTBOX1,"Initialize...");
-	displaySystemMode();//brian//2025-12-22//add display manual mode or dual mode
     SetTimer(timer_video,250,NULL);
 	OnRadio1();
     ShowInitFrame();
@@ -595,6 +594,7 @@ BEGIN_EVENTSINK_MAP(CNView, CCctvView)
 	ON_EVENT(CNView, IDC_MSFLEXGRID1, -600 /* Click */, OnClickMsflexgrid1, VTS_NONE)
 	ON_EVENT(CNView, IDC_MSFLEXGRID1, -601 /* DblClick */, OnDblClickMsflexgrid1, VTS_NONE)
 	ON_EVENT(CNView, IDC_MSFLEXGRID1, -605 /* MouseDown */, OnMouseDownMsflexgrid1, VTS_I2 VTS_I2 VTS_I4 VTS_I4)
+	ON_EVENT(CNView, IDC_MSFLEXGRID2, -605 /* MouseDown */, OnMouseDownMsflexgrid2, VTS_I2 VTS_I2 VTS_I4 VTS_I4)
 	//}}AFX_EVENTSINK_MAP
 END_EVENTSINK_MAP()
 
@@ -686,43 +686,78 @@ void CNView::OnMouseDownMsflexgrid1(short Button, short Shift, long x, long y)
 	
 }
 
-void CNView::displaySystemMode() //brian//2025-12-22//add display manual mode or dual mode
+void CNView::OnMouseDownMsflexgrid2(short Button, short Shift, long x, long y) 
 {
-    CString strSQL,pcname,mode,wbname;
-	pcname=app->m_strComputerName;
-	pcname.TrimRight();
-	if(program4==1)
-	{
-		wbname="WB A";
-	}
-	else if(program4==2)
-	{
-		wbname="WB B";
-	}	
-	CString wbmode,manual_setting;
-	strSQL.Format("SELECT TOP(1) MANUAL_MODE,SET_MANUAL_FLAG FROM WEIGHBRIDGE WHERE COMPUTER_NAME='%s' and NAME='%s'",pcname,wbname);
-	if(SqlValue(strSQL,1)==1)
-	{
-		wbmode="Dual";
-	}
-	else
-	{
-		wbmode="Normal";
-	}
-	if(SqlValue(strSQL,2)==1)
-	{
-		manual_setting="Manual";
-	}
-	else
-	{
-		manual_setting="Auto";
-	}
-	mode.Format("%s Mode (%s)",wbmode,manual_setting);
+	CString s;
 	
-
-	if(program4==0)
+	if(Button !=2) return;
+	int row = m_grid2.GetMouseRow();
+	if(row==0) return;
+	//if(UserLevel()<9) return; //BRIAN//TEST
+	
+	
+	
+	//	if(!app->SecondUserPassword) return;
+	
+	CMenu menu;
+	int pMenuID = 0;
+	
+    VERIFY( menu.LoadMenu(IDR_MFIRST_MULTI_WEIGHING) );
+	CMenu* pPopup = menu.GetSubMenu(pMenuID);
+	ASSERT(pPopup != NULL);
+	
+	if (UserLevel()<9)
 	{
-		mode= _T("Admin");
+		pPopup->RemoveMenu(ID_VEHICLEINYARD_EDIT, MF_BYCOMMAND);
+		pPopup->RemoveMenu(ID_VEHICLEINYARD_PRINT, MF_BYCOMMAND);
+		pPopup->RemoveMenu(ID_VEHICLEINYARD_DELETE, MF_BYCOMMAND);
 	}
-	SetDlgItemText(IDC_MODELABEL,mode);
+	POINT pp;
+	GetCursorPos(&pp);
+	UINT SelectionMade = pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_NONOTIFY |TPM_RETURNCMD,pp.x,pp.y,this);
+	pPopup->DestroyMenu();
+	if(SelectionMade==0) return;
+	
+	s.Format("Button %i Shift %i  x %i y %i selection %i", Button, Shift, x, y, SelectionMade);
+	TRACE("%s\n",s);
+    CString str = m_grid2.GetTextMatrix(row, 1);
+    CString vehno = m_grid2.GetTextMatrix(row, 2);
+    lset(first.dat[1], str);
+	
+    if(SelectionMade==ID_VEHICLEINYARD_EDIT) {
+        lset(first.dat[1], str);
+        first.Enq(first.dat[1], TRUE, 1);
+	}
+    else if(SelectionMade==ID_VEHICLEINYARD_PRINT) {
+        s.Format("Change Weighing Type for vehicle no.:%s", vehno);
+		UINT ID = MessageBox(s,"Confirm it", MB_ICONQUESTION | MB_YESNO);
+		if(ID==IDYES) {
+			lset(first.dat[1], str);
+			qd(first.dat[1], &first);
+			
+			CChangeWeighingType h;
+			h.df = &first;
+			h.m_vehicle = vehno;
+			h.DoModal();
+		}
+    }
+    else if(SelectionMade==ID_VEHICLEINYARD_DELETE) {
+        s.Format("Delete vehicle no:%s in yard", vehno);
+		UINT ID = MessageBox(s,"Confirm it", MB_ICONQUESTION | MB_YESNO);
+		if(ID==IDYES) {
+			s.Format("Delete from [%s] where [%s] = '%s'", 
+                first.name, first.fieldName[1], first.dat[1]);
+			RunSql(s);
+		}
+	}
+	if(SelectionMade==ID_VEHICLEINYARD_VIEW) {
+        lset(first.dat[1], str);
+		first.m_ViewOnly=TRUE;
+        first.Enq(first.dat[1], FALSE, 1);
+	}
+	else {
+		return;
+	}
+	ShowInformation();	
+	
 }
