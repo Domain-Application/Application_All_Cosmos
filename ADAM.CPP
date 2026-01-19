@@ -179,7 +179,7 @@ void WriteCoil(int Id,BOOL OnOFF)
 
         CString s;
         CString m_ip = szIPAddress;
-        UINT m_port = 503;
+        UINT m_port = 502;
         int m_slave = 1;
         int function = 5;
         int m_add = Id - 1;
@@ -259,27 +259,38 @@ int readADAMData(BYTE *inbuff,int function,int step)
     if(ADAMSimulator==2) {    //modbus TCP
 
         CString m_ip = szIPAddress;
+        // UINT m_port = 502;
+        // int m_slave = 1;
+        // int m_add = 0;
+
+		// app->Footmark(m_ip);
+
+        // readADAMFlag = 1;
+        // BYTE data[1000] = {0};
+        // int flag = OnModbusTCP(m_ip,m_port,m_tid,m_slave, function,  m_add,0, 24, data, sizeof(data));
+
+        // readADAMFlag = 0;
+		// if(_modbus_error_code==0) {		//if error not update
+		// 	if(function<=2) {
+		// 		bit2Byte(&data[9], inbuff, 3);
+				
+		// 		fvalue[function] = 0;
+		// 		memcpy((void*)&fvalue[function], &data[9], 3);
+		// 	}
+		// 	else {
+		// 		bit2Byte(&data[9], &inbuff[128], 3);
+		// 	}
+		// }
+        m_ip.TrimRight();
         UINT m_port = 502;
         int m_slave = 1;
+        int function = 1;			//read coil status
         int m_add = 0;
 
-		app->Footmark(m_ip);
-
-        readADAMFlag = 1;
         BYTE data[1000] = {0};
         int flag = OnModbusTCP(m_ip,m_port,m_tid,m_slave, function,  m_add,0, 24, data, sizeof(data));
-
-        readADAMFlag = 0;
-		if(_modbus_error_code==0) {		//if error not update
-			if(function<=2) {
-				bit2Byte(&data[9], inbuff, 3);
-				
-				fvalue[function] = 0;
-				memcpy((void*)&fvalue[function], &data[9], 3);
-			}
-			else {
-				bit2Byte(&data[9], &inbuff[128], 3);
-			}
+		if(flag) {
+			bit2Byte(&data[9], &adamData[0], 3);
 		}
         return flag;
     }
