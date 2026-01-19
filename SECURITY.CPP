@@ -120,7 +120,11 @@ UINT PhotoThreadProc(LPVOID pParam)
         {
             *pResultStr = plateno1;
         }
-        
+        if(i==9 || i==10)
+		{
+			app->OnSnapshot(i, file);
+			*pResultStr = "";
+		}
         // Post message to UI thread
         // We pass the string pointer in LPARAM. Receiver must delete it.
         ::PostMessage(p->hWnd, WM_PHOTO_PROCESSED, (WPARAM)i, (LPARAM)pResultStr);
@@ -177,7 +181,7 @@ BOOL CSecurity::OnInitDialog()
     SetTimer(1,100,NULL);
     SetTimer(3, 200, NULL);
     SetupIcons();
-    for(int i=1; i<=8;i++) {
+    for(int i=1; i<=10;i++) {
         CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
         previewWnd->GetWindowRect(PreviewRect[i]);
@@ -648,9 +652,19 @@ LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
              InvalidateRect( PreviewRect[idx] );
         }
     }
-    CString file = pView->strPhoto[i];
+    /*CString file = pView->strPhoto[i];
     if(m_jpg[i].Load( file )) {
          InvalidateRect( PreviewRect[i] );
+    }*/
+
+	if (i >= 1 && i <= 10) { 
+        CString file = pView->strPhoto[i]; 
+        
+        // Load the image into the array
+        if(m_jpg[i].Load( file )) {
+			// Redraw the specific rectangle for this preview
+			InvalidateRect( PreviewRect[i] );
+        }
     }
     m_progress.SetPos(i);    
     return 0;
@@ -659,7 +673,7 @@ LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
 void CSecurity::OnPaint() 
 {
     CPaintDC dc(this);
-    for(int i=1; i<=8;i++) {
+    for(int i=1; i<=10;i++) {
 		CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
 		m_jpg[i].Draw(&dc,PreviewRect[i].left,PreviewRect[i].top,

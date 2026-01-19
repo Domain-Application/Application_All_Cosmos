@@ -52,7 +52,7 @@ void CTriggerLPR::Initial()
     m_strExternalInfo2 = "";
 }
 
-void CTriggerLPR::SetExternalData(CString strInfo1, CString strInfo2, CString strImage1, CString strImage2, CString strImage3, CString strImage4)
+void CTriggerLPR::SetExternalData(CString strInfo1, CString strInfo2, CString strImage1, CString strImage2, CString strImage3, CString strImage4,CString strImage9,CString strImage10)
 {
     m_bUseExternalData = TRUE;
     m_strExternalInfo = strInfo1;
@@ -61,6 +61,8 @@ void CTriggerLPR::SetExternalData(CString strInfo1, CString strInfo2, CString st
     m_strExternalImage2 = strImage2;
     m_strExternalImage3 = strImage3;
     m_strExternalImage4 = strImage4;
+	m_strExternalImage9 = strImage9;
+	m_strExternalImage10 = strImage10;
 }
 
 void CTriggerLPR::DoDataExchange(CDataExchange* pDX)
@@ -95,7 +97,7 @@ BOOL CTriggerLPR::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	
-    for(int i=1; i<=4;i++) {
+    for(int i=1; i<=10;i++) {
         CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
         previewWnd->GetWindowRect(PreviewRect[i]);
@@ -112,7 +114,7 @@ BOOL CTriggerLPR::OnInitDialog()
 void CTriggerLPR::OnPaint() 
 {
     CPaintDC dc(this); // device context for painting
-    for(int i=1; i<=4;i++) {
+    for(int i=1; i<=10;i++) {
 		CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
 
@@ -172,7 +174,12 @@ void CTriggerLPR::OnTimer(UINT nIDEvent)
              if (!m_strExternalImage4.IsEmpty()) {
                  if(m_jpg[4].Load(m_strExternalImage4)) InvalidateRect(PreviewRect[4]);
              }
-             
+             if (!m_strExternalImage4.IsEmpty()) {
+                 if(m_jpg[9].Load(m_strExternalImage4)) InvalidateRect(PreviewRect[9]);
+             }
+			 if (!m_strExternalImage4.IsEmpty()) {
+                 if(m_jpg[10].Load(m_strExternalImage4)) InvalidateRect(PreviewRect[10]);
+             }
              iStep+=3;
              busy = 0;
              return;

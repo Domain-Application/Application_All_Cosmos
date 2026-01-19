@@ -222,7 +222,7 @@ void CSecurity::OnRadio2(BOOL LPR_Status, BOOL CNR_Status)
 
 void CIt1::LoadImages()
 {
-     int TotalCameras = 4;
+     int TotalCameras = 10;
 	 CString s;
 
      for(int i=1; i<=TotalCameras; i++) {

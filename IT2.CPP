@@ -168,7 +168,7 @@ void CIt2::ReplaceSubGrid(long rec,long irec,CMSFlexGrid *m_grid,DB *sub,int Idx
 
 void CIt2::LoadImages()
 {
-     int TotalCameras = 4;
+     int TotalCameras = 10;
 	 CString s;
 
      for(int i=1; i<=TotalCameras; i++) {

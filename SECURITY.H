@@ -19,7 +19,7 @@ struct PhotoThreadParam {
     HWND hWnd;
     int TotalCameras;
     char picFolder[MAX_PATH];
-    char strPhoto[10][MAX_PATH]; 
+    char strPhoto[11][MAX_PATH]; 
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -45,8 +45,8 @@ public:
 	CSensor m_S1;
     CSensor m_S2;
 	void SetupIcons();
-    CRect PreviewRect[9];
-    CJpgPicture m_jpg[9];
+    CRect PreviewRect[11];
+    CJpgPicture m_jpg[11];
 	int jpgkey, flagStable, iCounter, iBarrier;
     DB  *df;
 	CString s;

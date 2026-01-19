@@ -39,7 +39,7 @@ CNView *pView = NULL;
 CNView::CNView(): CCctvView(app->IDD_DOMVIEW)
 {
     weight_alt_flag = -1;
-    TotalCameras = 4;
+    TotalCameras = 10;
     m_swGrid = FALSE;
     requireOpenBackBarrier = FALSE;
     manual_open_barrier1 = weighbridge.lval(weighbridge_MOB1);

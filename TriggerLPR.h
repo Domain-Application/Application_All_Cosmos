@@ -21,7 +21,7 @@ public:
 	void Save2loglpr(const char *plateno1,int no);
     // New method for external data
     // Updated method for external data from dual cameras
-    void SetExternalData(CString strInfo1, CString strInfo2, CString strImage1, CString strImage2 = "", CString strImage3 = "", CString strImage4 = "");
+    void SetExternalData(CString strInfo1, CString strInfo2, CString strImage1, CString strImage2 = "", CString strImage3 = "", CString strImage4 = "",CString strImage9 = "",CString strImage10 = "");
 
     int iStep,oldwt,iCounter,busy,lpr_status[9];
     int direction,iTryCount;
@@ -29,8 +29,8 @@ public:
 	int no;
 	CString s,plateno,plateno1,plateno2;
 	CString picPlate,picLPR;
-    CRect PreviewRect[9];
-    CJpgPicture m_jpg[9];
+    CRect PreviewRect[11];
+    CJpgPicture m_jpg[11];
 
     // New members
     BOOL m_bUseExternalData;
@@ -40,6 +40,8 @@ public:
     CString m_strExternalImage2;
     CString m_strExternalImage3;
     CString m_strExternalImage4;
+	CString m_strExternalImage9;
+    CString m_strExternalImage10;
 
 // Dialog Data
 	//{{AFX_DATA(CTriggerLPR)
