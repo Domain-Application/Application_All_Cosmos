@@ -305,19 +305,19 @@ void CSecurity::OnProceed()
 		MessageBox("Vehicle Not found.","Error", MB_ICONSTOP);
 		return;
 	}
-	for(int i=1; i<=2; i++) 
-	{
+
 		CString str;
-		if(SensorStatus(i)) 
+		if(SensorStatus(1) || SensorStatus(2)) 
 		{
-			str.Format("Sensor %i blocked\n\nDo you want to continue ?",i);
+			str.Format("Sensor blocked\n\nDo you want to continue ?");
 			UINT ID = MessageBox(str,"Error Message", MB_ICONQUESTION | MB_YESNO);
 			if(ID==IDNO) {
 				CDialog::OnOK();
 				return;
 			}
 		}
-	}
+	
+
 	
 	GetDlgItemText(IDC_L1, m_vehicle);
 	GetDlgItemText(IDC_L2, m_contno);
