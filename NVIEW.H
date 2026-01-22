@@ -112,6 +112,7 @@ public:
 	afx_msg void OnDblClickMsflexgrid1();
 	afx_msg void OnMouseDownMsflexgrid1(short Button, short Shift, long x, long y);
 	afx_msg void OnMouseDownMsflexgrid2(short Button, short Shift, long x, long y);
+	afx_msg void RightClickGrid(CMSFlexGrid &grid, int idCol, int vehicleCol);
 	afx_msg LRESULT OnNewMessage(WPARAM wParam, LPARAM lParam);
     afx_msg void OnDestroy();
 	DECLARE_EVENTSINK_MAP()

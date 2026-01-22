@@ -426,7 +426,7 @@ void CNView::ShowInitFrame()
     if(screen_width >= 1900) fg.ratio = 1.23f;
 
     fg.SetTitle("No.",450,4);
-    fg.SetTitle("Container.",1650,1);
+    fg.SetTitle("Lorry.",1650,1);
     fg.SetTitle("AC Name",3600,1);
     fg.SetTitle("Product",2600,1);
 
@@ -615,74 +615,7 @@ void CNView::OnMouseDownMsflexgrid1(short Button, short Shift, long x, long y)
 	CString s;
 
 	if(Button !=2) return;
-	int row = m_grid.GetMouseRow();
-	if(row==0) return;
-	//if(UserLevel()<9) return; //BRIAN//TEST
-
-
-	
-//	if(!app->SecondUserPassword) return;
-	
-	CMenu menu;
-	int pMenuID = 0;
-	
-    VERIFY( menu.LoadMenu(IDR_MFIRST_MULTI_WEIGHING) );
-	CMenu* pPopup = menu.GetSubMenu(pMenuID);
-	ASSERT(pPopup != NULL);
-
-	if (UserLevel()<9)
-	{
-      pPopup->RemoveMenu(ID_VEHICLEINYARD_EDIT, MF_BYCOMMAND);
-      pPopup->RemoveMenu(ID_VEHICLEINYARD_PRINT, MF_BYCOMMAND);
-	  pPopup->RemoveMenu(ID_VEHICLEINYARD_DELETE, MF_BYCOMMAND);
-	}
-	POINT pp;
-	GetCursorPos(&pp);
-	UINT SelectionMade = pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_NONOTIFY |TPM_RETURNCMD,pp.x,pp.y,this);
-	pPopup->DestroyMenu();
-	if(SelectionMade==0) return;
-
-	s.Format("Button %i Shift %i  x %i y %i selection %i", Button, Shift, x, y, SelectionMade);
-	TRACE("%s\n",s);
-    CString str = m_grid.GetTextMatrix(row, 7);
-    CString vehno = m_grid.GetTextMatrix(row, 1);
-    lset(first.dat[1], str);
-	
-    if(SelectionMade==ID_VEHICLEINYARD_EDIT) {
-        lset(first.dat[1], str);
-        first.Enq(first.dat[1], TRUE, 1);
-	}
-    else if(SelectionMade==ID_VEHICLEINYARD_PRINT) {
-        s.Format("Change Weighing Type for vehicle no.:%s", vehno);
-		UINT ID = MessageBox(s,"Confirm it", MB_ICONQUESTION | MB_YESNO);
-		if(ID==IDYES) {
-             lset(first.dat[1], str);
-             qd(first.dat[1], &first);
-
-             CChangeWeighingType h;
-			 h.df = &first;
-			 h.m_vehicle = vehno;
-             h.DoModal();
-		}
-    }
-    else if(SelectionMade==ID_VEHICLEINYARD_DELETE) {
-        s.Format("Delete vehicle no:%s in yard", vehno);
-		UINT ID = MessageBox(s,"Confirm it", MB_ICONQUESTION | MB_YESNO);
-		if(ID==IDYES) {
-			s.Format("Delete from [%s] where [%s] = '%s'", 
-                first.name, first.fieldName[1], first.dat[1]);
-			RunSql(s);
-		}
-	}
-	if(SelectionMade==ID_VEHICLEINYARD_VIEW) {
-        lset(first.dat[1], str);
-		first.m_ViewOnly=TRUE;
-        first.Enq(first.dat[1], FALSE, 1);
-	}
-	else {
-		return;
-	}
-	ShowInformation();	
+	RightClickGrid(m_grid, 6, 1);	
 	
 }
 
@@ -691,73 +624,88 @@ void CNView::OnMouseDownMsflexgrid2(short Button, short Shift, long x, long y)
 	CString s;
 	
 	if(Button !=2) return;
-	int row = m_grid2.GetMouseRow();
-	if(row==0) return;
-	//if(UserLevel()<9) return; //BRIAN//TEST
+	RightClickGrid(m_grid2, 1, 2);
 	
+}
+
+void CNView::RightClickGrid(CMSFlexGrid &grid, int idCol, int vehicleCol)
+{
+    CString s;
 	
+    int row = grid.GetMouseRow();
+    if(row == 0) return;
 	
-	//	if(!app->SecondUserPassword) return;
+    CMenu menu;
+    VERIFY(menu.LoadMenu(IDR_MFIRST_MULTI_WEIGHING));
 	
-	CMenu menu;
-	int pMenuID = 0;
+    CMenu* pPopup = menu.GetSubMenu(0);
+    ASSERT(pPopup != NULL);
 	
-    VERIFY( menu.LoadMenu(IDR_MFIRST_MULTI_WEIGHING) );
-	CMenu* pPopup = menu.GetSubMenu(pMenuID);
-	ASSERT(pPopup != NULL);
+    if(UserLevel() < 9)
+    {
+        pPopup->RemoveMenu(ID_VEHICLEINYARD_EDIT, MF_BYCOMMAND);
+        pPopup->RemoveMenu(ID_VEHICLEINYARD_PRINT, MF_BYCOMMAND);
+        pPopup->RemoveMenu(ID_VEHICLEINYARD_DELETE, MF_BYCOMMAND);
+    }
 	
-	if (UserLevel()<9)
-	{
-		pPopup->RemoveMenu(ID_VEHICLEINYARD_EDIT, MF_BYCOMMAND);
-		pPopup->RemoveMenu(ID_VEHICLEINYARD_PRINT, MF_BYCOMMAND);
-		pPopup->RemoveMenu(ID_VEHICLEINYARD_DELETE, MF_BYCOMMAND);
-	}
-	POINT pp;
-	GetCursorPos(&pp);
-	UINT SelectionMade = pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_NONOTIFY |TPM_RETURNCMD,pp.x,pp.y,this);
-	pPopup->DestroyMenu();
-	if(SelectionMade==0) return;
+    POINT pt;
+    GetCursorPos(&pt);
 	
-	s.Format("Button %i Shift %i  x %i y %i selection %i", Button, Shift, x, y, SelectionMade);
-	TRACE("%s\n",s);
-    CString str = m_grid2.GetTextMatrix(row, 1);
-    CString vehno = m_grid2.GetTextMatrix(row, 2);
+    UINT SelectionMade = pPopup->TrackPopupMenu(
+        TPM_LEFTALIGN |
+        TPM_LEFTBUTTON |
+        TPM_NONOTIFY |
+        TPM_RETURNCMD,
+        pt.x, pt.y, this);
+	
+    if(SelectionMade == 0) return;
+	
+    CString str   = grid.GetTextMatrix(row, idCol);
+    CString vehno = grid.GetTextMatrix(row, vehicleCol);
+	
     lset(first.dat[1], str);
 	
-    if(SelectionMade==ID_VEHICLEINYARD_EDIT) {
-        lset(first.dat[1], str);
+    if(SelectionMade == ID_VEHICLEINYARD_EDIT)
+    {
         first.Enq(first.dat[1], TRUE, 1);
-	}
-    else if(SelectionMade==ID_VEHICLEINYARD_PRINT) {
-        s.Format("Change Weighing Type for vehicle no.:%s", vehno);
-		UINT ID = MessageBox(s,"Confirm it", MB_ICONQUESTION | MB_YESNO);
-		if(ID==IDYES) {
-			lset(first.dat[1], str);
-			qd(first.dat[1], &first);
-			
-			CChangeWeighingType h;
-			h.df = &first;
-			h.m_vehicle = vehno;
-			h.DoModal();
-		}
     }
-    else if(SelectionMade==ID_VEHICLEINYARD_DELETE) {
+    else if(SelectionMade == ID_VEHICLEINYARD_PRINT)
+    {
+        s.Format("Change Weighing Type for vehicle no.:%s", vehno);
+		
+        if(MessageBox(s, "Confirm it", MB_ICONQUESTION | MB_YESNO) == IDYES)
+        {
+            qd(first.dat[1], &first);
+			
+            CChangeWeighingType dlg;
+            dlg.df = &first;
+            dlg.m_vehicle = vehno;
+            dlg.DoModal();
+        }
+    }
+    else if(SelectionMade == ID_VEHICLEINYARD_DELETE)
+    {
         s.Format("Delete vehicle no:%s in yard", vehno);
-		UINT ID = MessageBox(s,"Confirm it", MB_ICONQUESTION | MB_YESNO);
-		if(ID==IDYES) {
-			s.Format("Delete from [%s] where [%s] = '%s'", 
-                first.name, first.fieldName[1], first.dat[1]);
-			RunSql(s);
-		}
-	}
-	if(SelectionMade==ID_VEHICLEINYARD_VIEW) {
-        lset(first.dat[1], str);
-		first.m_ViewOnly=TRUE;
+		
+        if(MessageBox(s, "Confirm it", MB_ICONQUESTION | MB_YESNO) == IDYES)
+        {
+            s.Format("Delete from [%s] where [%s] = '%s'",
+				first.name,
+				first.fieldName[1],
+				first.dat[1]);
+			
+            RunSql(s);
+        }
+    }
+    else if(SelectionMade == ID_VEHICLEINYARD_VIEW)
+    {
+        first.m_ViewOnly = TRUE;
         first.Enq(first.dat[1], FALSE, 1);
-	}
-	else {
-		return;
-	}
-	ShowInformation();	
+    }
+    else
+    {
+        return;
+    }
 	
+    ShowInformation();
 }
