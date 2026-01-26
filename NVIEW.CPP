@@ -6,6 +6,7 @@
 #include "Security.h"
 #include "ChangeWeighingType.h"
 #include "tcpServer.h"
+#include "WB.H"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -667,7 +668,15 @@ void CNView::RightClickGrid(CMSFlexGrid &grid, int idCol, int vehicleCol)
 	
     if(SelectionMade == ID_VEHICLEINYARD_EDIT)
     {
-        first.Enq(first.dat[1], TRUE, 1);
+       // first.Enq(first.dat[1], TRUE, 1);
+		qd(first.dat[1], &first);
+		DB *ftable;
+		 ftable=&first;
+		 CWb p1(ftable->ID,ftable,ftable->f[1].idx & 0x01);
+		 p1.sub = &fdata;
+   //    p1.m_WinPrint = TRUE;
+		 p1.LptNo       = 1;
+		 p1.DoModal();
     }
     else if(SelectionMade == ID_VEHICLEINYARD_PRINT)
     {

@@ -71,7 +71,7 @@ enum bindat {Bin_REFNO=1,Bin_BINNO,Bin_DATE,Bin_TICKET,Bin_LORRYIN,Bin_LORRYIN_T
 enum bin{B_CODE=1,B_NAME,B_REMARKS,B_INYARD,B_INYARDTIME,B_OUTYARDTIME,B_SAVECOUNTER};
 extern DB  unit;
 extern DB  tt;
-extern DB  wbdata, prdata, dbdata, despatch;
+extern DB  wbdata, prdata, dbdata, despatch,fdata;
 extern DB  tolerant,vehicle,pm1no,pm2no;
 extern DB  dscr,packing,transp,warehouse;
 

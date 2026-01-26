@@ -41,7 +41,7 @@ DB unit(IDD_UNIT);
 DB tt(IDD_TT);
 int STCR,program4=0;
 DB wb(IDD_WB),wbdata(IDD_WBDATA);
-DB despatch(IDD_DESPATCH),dbdata(IDD_DBDATA);
+DB despatch(IDD_DESPATCH),dbdata(IDD_DBDATA),fdata(IDD_DBDATA);
 DB tolerant(IDD_TOLERANT);
 DB despatch_ticket_info, receive_ticket_info;
 // LD Green (M) Sdn. Bhd
@@ -144,6 +144,7 @@ void CMenuApp::OpenAllDataFile()
     ado(&tt,"tt");
     tado(&wbdata,"wbdata",init_wbdata);
     tado(&dbdata,"dbdata",init_wbdata);
+	tado(&fdata,"fdata",init_wbdata);
     ado(&tolerant,"tolerant");
     if(ado(&profile,"profile")) {
         readrec(1,&profile);
@@ -176,6 +177,7 @@ void CMenuApp::OpenAllDataFile()
 
     wb.e->chain = &wbdata;
     despatch.e->chain = &dbdata;
+	first.e->chain = &fdata;
 }
 
 void CMenuApp::SetDBRelations()
