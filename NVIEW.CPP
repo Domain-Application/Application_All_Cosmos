@@ -669,10 +669,15 @@ void CNView::RightClickGrid(CMSFlexGrid &grid, int idCol, int vehicleCol)
     if(SelectionMade == ID_VEHICLEINYARD_EDIT)
     {
        // first.Enq(first.dat[1], TRUE, 1);
-		qd(first.dat[1], &first);
+		//qd(first.dat[1], &first);
 		DB *ftable;
 		 ftable=&first;
+		 lset(ftable->dat[1], str);
+		 qd(ftable->dat[1], ftable);
+		 app->UpdateTableLastTransaction(ftable, FALSE);
+		app->UpdateBrowseLastTransaction(ftable, FALSE);
 		 CWb p1(ftable->ID,ftable,ftable->f[1].idx & 0x01);
+
 		 p1.sub = &fdata;
    //    p1.m_WinPrint = TRUE;
 		 p1.LptNo       = 1;

@@ -281,9 +281,10 @@ BOOL CSecurity::OnSecond(BOOL LPR_Status, BOOL CNR_Status)
     IsZeroWt = FALSE;
     CString msg, normal_report_name, do_report_name;
     normal_report_name.Format("%s.rpt", pf->name);
-	do_report_name.Format("%sdo.rpt", pf->name);
+
 	pf->PrintOneFormOnly(normal_report_name);
-	pf->PrintOneFormOnly(do_report_name);
+
+	
 	s.Format("Delete from [%s] where [%s] = '%s'", df->name, df->fieldName[1], df->dat[1]);
     RunSql(s);
     DB sub_table;
@@ -312,6 +313,13 @@ BOOL CSecurity::OnSecond(BOOL LPR_Status, BOOL CNR_Status)
     }
     dclose(&adoTmp);
     dclose(&sub_table); //TODO: investigate why require instantiate another DB pointer or else once Added New, The weighing entry facing system crash
+	if(!strcmp(pf->name, "WB")) {
+		pf->PrintOneFormOnly("wbdo.rpt");
+	}
+	else
+	{
+		pf->PrintOneFormOnly("dbdo.rpt");
+	}
     return TRUE;
 }
 

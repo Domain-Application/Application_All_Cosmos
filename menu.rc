@@ -416,7 +416,7 @@ END
 
 IDD_MENU_FORM DIALOGEX 0, 0, 983, 445
 STYLE WS_CHILD | WS_BORDER
-FONT 10, "MS Serif"
+FONT 10, "MS Serif", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "Detail Report",ID00011,28,42,113,16,BS_LEFT
     PUSHBUTTON      "Detail Report",ID00012,28,72,113,16,BS_LEFT
@@ -1213,7 +1213,7 @@ END
 IDD_SECURITY DIALOGEX 0, 0, 430, 380
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Weighing Control"
-FONT 10, "System"
+FONT 10, "System", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "F5->  Confirm Weight",IDOK,42,237,194,51,WS_DISABLED
     CONTROL         "",IDC_TEXTBOX1,"{8BD21D10-EC42-11CE-9E0D-00AA006002F3}",
@@ -1657,7 +1657,7 @@ BEGIN
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "menu.EXE\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "WB01\0"
+            VALUE "ProductName", "WB00\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
             VALUE "SpecialBuild", "\0"
         END
