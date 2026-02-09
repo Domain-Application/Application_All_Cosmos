@@ -108,6 +108,7 @@ public:
 	afx_msg void OnRadio2();
     afx_msg void OnRadio3();
 	afx_msg void OnButton1();
+	afx_msg void OnButton2();
 	afx_msg void OnClickMsflexgrid1();
 	afx_msg void OnDblClickMsflexgrid1();
 	afx_msg void OnMouseDownMsflexgrid1(short Button, short Shift, long x, long y);

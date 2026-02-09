@@ -117,6 +117,7 @@ BEGIN
         MENUITEM "1&3 Receiving Weighing Report", ID00013
         MENUITEM "1&4 Despatch Weighing Report", ID00014
         MENUITEM "1&5 Audit Report",            ID00015
+        MENUITEM "1&6 First Weighing",          ID00016
     END
     POPUP "&2. Table"
     BEGIN
@@ -416,7 +417,7 @@ END
 
 IDD_MENU_FORM DIALOGEX 0, 0, 983, 445
 STYLE WS_CHILD | WS_BORDER
-FONT 10, "MS Serif", 0, 0, 0x1
+FONT 10, "MS Serif"
 BEGIN
     PUSHBUTTON      "Detail Report",ID00011,28,42,113,16,BS_LEFT
     PUSHBUTTON      "Detail Report",ID00012,28,72,113,16,BS_LEFT
@@ -453,6 +454,7 @@ BEGIN
     LTEXT           "",IDC_PREVIEW4,356,127,203,111,0,WS_EX_STATICEDGE
     LTEXT           "",IDC_PREVIEW9,763,11,201,111,0,WS_EX_STATICEDGE
     LTEXT           "",IDC_PREVIEW10,763,127,201,111,0,WS_EX_STATICEDGE
+    PUSHBUTTON      "Refresh Pending List",IDC_BUTTON2,357,380,91,14
 END
 
 IDD_LOGERR DIALOGEX 0, 0, 267, 164
@@ -706,7 +708,7 @@ STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
     WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
 MENU 258
-FONT 10, "MS Serif", 0, 0, 0x1
+FONT 10, "MS Serif"
 BEGIN
     LTEXT           "&Ticket No",IDC_STATIC1,10,44,34,12
     EDITTEXT        IDC_EDIT1,69,44,58,12,ES_AUTOHSCROLL | ES_READONLY | 
@@ -804,7 +806,7 @@ BEGIN
     CONTROL         "",IDC_PRINTCOUNTER,
                     "{978C9E23-D4B0-11CE-BF2D-00AA003F40D0}",0x0,61,344,25,
                     12
-    ICON            2533,IDC_STATIC,366,49,16,16
+    ICON            2533,IDC_STATIC,366,49,20,20
     CONTROL         "",IDC_WT,"{978C9E23-D4B0-11CE-BF2D-00AA003F40D0}",0x0,
                     391,41,119,38
     CONTROL         "",IDC_WB1,"{978C9E23-D4B0-11CE-BF2D-00AA003F40D0}",0x0,
@@ -867,14 +869,15 @@ BEGIN
                     WS_EX_ACCEPTFILES
     EDITTEXT        IDC_EDIT52,70,215,121,12,ES_UPPERCASE | ES_AUTOHSCROLL | 
                     ES_READONLY | WS_VSCROLL
+    PUSHBUTTON      "Save complete ticket",IDC_BUTTON7,357,205,191,14
 END
 
-IDD_DESPATCH DIALOGEX 0, 0, 520, 382
+IDD_DESPATCH DIALOGEX 0, 0, 520, 405
 STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | 
     WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
 MENU 258
-FONT 10, "MS Serif", 0, 0, 0x1
+FONT 10, "MS Serif"
 BEGIN
     LTEXT           "&Ticket No",IDC_STATIC1,10,44,34,12
     EDITTEXT        IDC_EDIT1,47,44,58,12,ES_AUTOHSCROLL | ES_READONLY | 
@@ -933,18 +936,18 @@ BEGIN
     LTEXT           "Seal Number From",IDC_STATIC,10,173,52,8
     LTEXT           "To",IDC_STATIC,132,173,9,8
     CONTROL         "",IDC_MSFLEXGRID1,
-                    "{6262D3A0-531B-11CF-91F6-C2863C385E30}",WS_TABSTOP,3,
-                    209,504,111
-    LTEXT           "Total Sales Qty:",IDC_STATIC,192,322,44,8
+                    "{6262D3A0-531B-11CF-91F6-C2863C385E30}",WS_TABSTOP,4,
+                    235,504,111
+    LTEXT           "Total Sales Qty:",IDC_STATIC,193,348,44,8
     CONTROL         "",IDC_TOTAL8,"{978C9E23-D4B0-11CE-BF2D-00AA003F40D0}",
-                    0x0,243,322,28,10
-    RTEXT           "Total Theoretical Wt (Kg):",IDC_STATIC,391,322,73,8
+                    0x0,244,348,28,10
+    RTEXT           "Total Theoretical Wt (Kg):",IDC_STATIC,392,348,73,8
     CONTROL         "",IDC_TOTAL14,"{978C9E23-D4B0-11CE-BF2D-00AA003F40D0}",
-                    0x0,469,322,36,10
-    RTEXT           "Total Theoretical Variance Wt (Kg):",IDC_STATIC,369,333,
+                    0x0,470,348,36,10
+    RTEXT           "Total Theoretical Variance Wt (Kg):",IDC_STATIC,370,359,
                     95,8
     CONTROL         "",IDC_VAR,"{978C9E23-D4B0-11CE-BF2D-00AA003F40D0}",0x0,
-                    469,333,36,10
+                    470,359,36,10
     LTEXT           "Prime Mover No",IDC_STATIC,333,158,47,8
     LTEXT           "Date/Time",IDC_STATIC,395,158,30,8
     LTEXT           "Weight (Kg)",IDC_STATIC,463,158,35,8
@@ -968,9 +971,9 @@ BEGIN
                     WS_EX_STATICEDGE
     PUSHBUTTON      "Prime Mover Weighing",IDC_BUTTON1,314,140,191,14,
                     BS_FLAT
-    LTEXT           "Print Counter:",IDC_STATIC,18,325,40,8
+    LTEXT           "Print Counter:",IDC_STATIC,19,351,40,8
     CONTROL         "",IDC_PRINTCOUNTER,
-                    "{978C9E23-D4B0-11CE-BF2D-00AA003F40D0}",0x0,62,325,25,
+                    "{978C9E23-D4B0-11CE-BF2D-00AA003F40D0}",0x0,63,351,25,
                     12
     ICON            2533,IDC_STATIC,322,48,20,20
     CONTROL         "",IDC_WT,"{978C9E23-D4B0-11CE-BF2D-00AA003F40D0}",0x0,
@@ -990,9 +993,9 @@ BEGIN
     LTEXT           "Buyer Wt",IDC_STATIC,435,103,28,8
     EDITTEXT        IDC_EDIT15,470,102,28,12,ES_RIGHT | ES_AUTOHSCROLL | 
                     ES_READONLY | NOT WS_BORDER,WS_EX_STATICEDGE
-    RTEXT           "Buyer Variance Wt (Kg):",IDC_STATIC,391,344,73,8
+    RTEXT           "Buyer Variance Wt (Kg):",IDC_STATIC,392,370,73,8
     CONTROL         "",IDC_VAR2,"{978C9E23-D4B0-11CE-BF2D-00AA003F40D0}",0x0,
-                    469,344,36,10
+                    470,370,36,10
     RTEXT           "&Buyer Lot No",IDC_STATIC12,211,173,46,12,SS_NOTIFY,
                     WS_EX_ACCEPTFILES
     LTEXT           "&Warehouse",IDC_STATIC11,10,147,34,12,SS_NOTIFY,
@@ -1023,6 +1026,15 @@ BEGIN
                     ES_READONLY | NOT WS_BORDER,WS_EX_STATICEDGE
     EDITTEXT        IDC_EDIT31,490,188,8,12,ES_RIGHT | ES_AUTOHSCROLL | 
                     ES_READONLY | NOT WS_BORDER,WS_EX_STATICEDGE
+    PUSHBUTTON      "Save complete ticket",IDC_BUTTON7,314,204,191,14
+    LTEXT           "&Container",IDC_STATIC51,10,201,28,12,SS_NOTIFY,
+                    WS_EX_ACCEPTFILES
+    EDITTEXT        IDC_EDIT51,48,200,121,12,ES_UPPERCASE | ES_AUTOHSCROLL | 
+                    ES_READONLY | WS_VSCROLL
+    LTEXT           "&Trailer",IDC_STATIC52,10,215,32,12,SS_NOTIFY,
+                    WS_EX_ACCEPTFILES
+    EDITTEXT        IDC_EDIT52,48,214,121,12,ES_UPPERCASE | ES_AUTOHSCROLL | 
+                    ES_READONLY | WS_VSCROLL
 END
 
 IDD_DRIVER DIALOG DISCARDABLE  0, 0, 288, 286
@@ -1657,7 +1669,7 @@ BEGIN
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "menu.EXE\0"
             VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "WB00\0"
+            VALUE "ProductName", "WB01\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
             VALUE "SpecialBuild", "\0"
         END
@@ -1745,7 +1757,7 @@ BEGIN
 
     IDD_DESPATCH, DIALOG
     BEGIN
-        BOTTOMMARGIN, 374
+        BOTTOMMARGIN, 397
     END
 
     IDD_DRIVER, DIALOG
@@ -2130,7 +2142,7 @@ BEGIN
 0x0000, 0x0000, 0x0200, 0x0018, 0x0223, 0x0000, 0x0000, 0x0000, 0xff80, 
 0x0080, 0x0003, 0x0000, 0x1899, 0x0000, 0x07db, 0x0000, 0x0200, 0x0020, 
 0x00f7, 0x0000, 0x0005, 0x8000, 0x0001, 0x4000, 0x03c0, 0x0000, 0x2200, 
-0x0002, 0x02bc, 0x0000, 0x7241, 0x6169, 0x006c, 0x0000, 
+0x0002, 0x02bc, 0x0000, 0x7241, 0x6169, 0x726c, 0x6669, 
     IDC_WB1, 0x376, 60, 0
 0x0000, 0x0000, 0x0200, 0x0018, 0x0223, 0x0000, 0x0000, 0x0000, 0xff80, 
 0x00ff, 0x0003, 0x0000, 0x05ca, 0x0000, 0x0211, 0x0000, 0x0200, 0x0018, 
@@ -2199,7 +2211,7 @@ BEGIN
 0x0000, 0x0000, 0x0200, 0x0018, 0x0223, 0x0000, 0x0000, 0x0000, 0x80ff, 
 0x00ff, 0x0003, 0x0000, 0x1899, 0x0000, 0x07db, 0x0000, 0x0200, 0x0020, 
 0x00f7, 0x0000, 0x0005, 0x8000, 0x0001, 0x4000, 0x03c0, 0x0000, 0x2200, 
-0x0002, 0x02bc, 0x0000, 0x7241, 0x6169, 0x006c, 0x0000, 
+0x0002, 0x02bc, 0x0000, 0x7241, 0x6169, 0x726c, 0x6669, 
     IDC_WB1, 0x376, 60, 0
 0x0000, 0x0000, 0x0200, 0x0018, 0x0223, 0x0000, 0x0000, 0x0000, 0xff80, 
 0x00ff, 0x0003, 0x0000, 0x05ca, 0x0000, 0x0211, 0x0000, 0x0200, 0x0018, 

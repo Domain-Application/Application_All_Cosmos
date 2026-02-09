@@ -22,6 +22,36 @@ void AdminTicketDb(DB *df, DB *sub)
     p1.DoModal();
 }
 
+void AdminTicketFirstDb(DB *df, DB *sub)
+{
+	CString s,ticketprefix;
+	s.Format("Open ticket for receive (No for despatch) ?");
+	if(AfxMessageBox(s, MB_ICONQUESTION | MB_YESNO) == IDYES)
+	{
+		ticketprefix="K";
+	}
+	else
+	{
+		ticketprefix="D";
+	}
+	CString strTicketNo;
+	strTicketNo.Format("%s_%s", ticketprefix, first.dat[1]);
+	strTicketNo.TrimRight();
+	df->m_strTicketNo = strTicketNo;
+		FindAddInfoTicketNo(df);
+
+	
+    if(df->ID==0) {
+        AfxMessageBox("Database not open");
+        return;
+    }
+    CWb p1(df->ID,df,df->f[1].idx & 0x01);
+    p1.sub = sub;
+	//    p1.m_WinPrint = TRUE;
+    p1.LptNo       = 1;
+    p1.DoModal();
+}
+
 void AdminProfileDb(DB *df)
 {
     if(df->ID==0) {
@@ -36,6 +66,7 @@ void AdminProfileDb(DB *df)
 int ProgramMenuNo,level;
 int CMenuApp::SubProgram(int key)
 {
+	CString s;
     ProgramMenuNo = 0;
     switch(key) {
     case M_NORMAL*10+1:
@@ -57,6 +88,11 @@ int CMenuApp::SubProgram(int key)
     case M_NORMAL*10+5:
         STCR = 0;
         TableContainer("fcctn");
+        break;
+	case M_NORMAL*10+6:
+        STCR = 3;
+		 AdminTicketDb(&first, &fdata);
+		//AdminTicketFirstDb(&first, &fdata);
         break;
     case M_CTRL*10+1:
         AdminDb(&accode);

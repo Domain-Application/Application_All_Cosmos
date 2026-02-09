@@ -28,12 +28,12 @@ public:
     void ReplaceSubGrid(long rec,long irec,CMSFlexGrid *m_grid,DB *sub,int IdxItem);
     void OnSearch();
     void OnAfterPrint();
+	virtual void OnNew();
     CString strWM,strWM2,errmsg;
     CString WeightServer;
     char cmd1[10],cmd2[10];
     long current_weight;
     BOOL busy;
-
 // Dialog Data
 	//{{AFX_DATA(CWb)
 	enum { IDD = IDD_WB };
@@ -63,7 +63,8 @@ protected:
 	afx_msg void OnSecondWt();
 	afx_msg void OnPM1WT();
 	afx_msg void OnPM2WT();
-	//}}AFX_MSG
+	afx_msg void OnSetCompleteTicket();
+;	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
 

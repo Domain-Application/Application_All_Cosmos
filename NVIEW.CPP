@@ -32,6 +32,7 @@ BEGIN_MESSAGE_MAP(CNView, CCctvView)
 	ON_WM_ERASEBKGND()
 	ON_BN_CLICKED(IDC_RestartCameras, OnRestartCameras)
 	ON_BN_CLICKED(IDC_BUTTON1, OnButton1)
+	ON_BN_CLICKED(IDC_BUTTON2, OnButton2)
     ON_MESSAGE(WM_NEW_MESSAGE, OnNewMessage)
 END_MESSAGE_MAP()
 
@@ -591,6 +592,11 @@ void CNView::OnButton1()
 
 }
 
+void CNView::OnButton2() 
+{	
+	ShowInformation();
+}
+
 BEGIN_EVENTSINK_MAP(CNView, CCctvView)
     //{{AFX_EVENTSINK_MAP(CNView)
 	ON_EVENT(CNView, IDC_MSFLEXGRID1, -600 /* Click */, OnClickMsflexgrid1, VTS_NONE)
@@ -645,7 +651,6 @@ void CNView::RightClickGrid(CMSFlexGrid &grid, int idCol, int vehicleCol)
 	
     if(UserLevel() < 9)
     {
-        pPopup->RemoveMenu(ID_VEHICLEINYARD_EDIT, MF_BYCOMMAND);
         pPopup->RemoveMenu(ID_VEHICLEINYARD_PRINT, MF_BYCOMMAND);
         pPopup->RemoveMenu(ID_VEHICLEINYARD_DELETE, MF_BYCOMMAND);
     }

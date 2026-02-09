@@ -36,6 +36,7 @@ CWb::CWb(UINT IDD,DB *pdf,int Idx,CWnd* pParent /*=NULL*/)
     csPrint2 ="D/O";
     m_Print2 = TRUE;
     m_SaveAfterPrint=TRUE;
+	
 }
 
 void CWb::OnPressPrint2()
@@ -134,6 +135,13 @@ void CWb::ShowInformation()
     else {
         GetDlgItem(IDC_BUTTON3)->EnableWindow(TRUE);
     }
+	if(!strcmp(df->name, "FIRST"))
+	{
+		GetDlgItem(IDC_BUTTON7)->EnableWindow(TRUE);
+	}
+	else {
+        GetDlgItem(IDC_BUTTON7)->EnableWindow(FALSE);
+    }
 }
 
 void CWb::ShowInitFrame(CMSFlexGrid *grid,DB *sub)
@@ -174,6 +182,8 @@ BEGIN_MESSAGE_MAP(CWb, CParent)
 	ON_BN_CLICKED(IDC_BUTTON4, OnSecondWt)
 	ON_BN_CLICKED(IDC_BUTTON5, OnPM1WT)
 	ON_BN_CLICKED(IDC_BUTTON6, OnPM2WT)
+	ON_BN_CLICKED(IDC_BUTTON7, OnSetCompleteTicket)
+	
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -472,3 +482,176 @@ void CWb::OnFtpUpload()
     h1.sub = sub;
     h1.DoModal();
 }
+
+void CWb::OnSetCompleteTicket()
+{
+	if(!strcmp(df->name, "FIRST")) 
+	{
+		CString strSQL,ticket;
+		DB *maintable;
+		DB sub_table;
+		CString tablename,msn,s;
+		ticket=df->dat[TICKET];
+		char prefix = ticket.GetAt(0);
+
+		if (prefix == 'D')
+		{
+			maintable=&despatch;
+			tablename="DBDATA";
+			msn="Despatch";
+		}
+		else if(prefix == 'K')
+		{
+			maintable=&wb;
+			tablename="WBDATA";
+			msn="Receive";
+		}
+		s.Format("Confirm to complete ticket %s to %s Entry ?",ticket,msn);
+        if(MessageBox(s, "Confirm it", MB_ICONQUESTION | MB_YESNO) == IDYES)
+		{
+			lsetblank(maintable);		
+			fetch(maintable, df);
+			maintable->AddNew();
+			
+			strSQL.Format("Delete from [%s] where [%s] = '%s'", df->name, df->fieldName[1], df->dat[1]);
+			RunSql(strSQL);
+
+			tado(&sub_table, tablename);
+			strSQL.Format("select * from fdata where refno = '%s'", df->dat[1]);
+			DB adoTmp;
+			ado(&adoTmp, "", NULL, strSQL);
+			long rec  = read_sumindex(0, &adoTmp);
+			if(rec > 0)
+			{
+				for(int i = 1; i <= rec; i++)
+				{
+					readrec(i, &adoTmp);
+					fetch(&sub_table, &adoTmp);
+					sub_table.AddNew();
+				}   
+				strSQL.Format("delete fdata where refno = '%s'", df->dat[1]);
+				RunSql(strSQL);
+			}
+			dclose(&adoTmp);
+			dclose(&sub_table);
+		}
+	}
+	else
+	{
+		AfxMessageBox("Cannot convert ticket in this entry");
+		return;
+	}
+	
+}
+
+
+
+
+void CWb::OnNew() 
+{
+	
+		CString s,ticketprefix,ticketfield,strSQL,ticketformat;
+		int print;
+		if(!strcmp(df->name, "FIRST"))
+		{
+			s.Format("Add new ticket for receive (No for despatch) ?");
+			if(MessageBox(s, "Confirm it", MB_ICONQUESTION | MB_YESNO) == IDYES)
+			{
+				ticketprefix="K";
+				ticketfield="receive_ticket_info";
+				print=1;
+			}
+			else
+			{
+				ticketprefix="D";
+				ticketfield="despatch_ticket_info";
+				print=2;
+			}
+			strSQL.Format("SELECT [NEXT NO] FROM TicketNo where [recordset]='%s'",ticketfield);
+			int ticketno=SqlValue(strSQL);
+			ticketformat.Format("%s%09d", ticketprefix, ticketno);
+		}
+		app->Footmark("  OnNew() - begin");
+		int tmp_saveflag = SaveFlag;
+		
+		if(m_Enabled==FALSE) return;
+		if(Status==view__only){
+			ErrorBox(IDS_NO_RIGHT, 3018);
+			return;                   //View Only
+		}
+		else if(Status==edit__only){
+			ErrorBox(IDS_NO_RIGHT, 3019);
+			return;                   //Edit Only
+		}
+		if(df->m_CannotAdd) {
+			//		ErrorBox(IDS_NO_RIGHT, 3017);		//2020-02-22 cannot block still can new
+			//		return;
+		}
+		
+		
+		//    if (IsOldPeriodLock()) return ;     // 11.7.2013
+		
+		df->SaveFlag = SaveFlag = NEWFILE;
+		
+		ShowRefno(SW_HIDE);
+		
+		NewFlag  = NEW_MODE;
+		if(df->NewIsBlank){
+			df->lsetblank();
+		}
+		lset(df->dat[1],"NEW");
+		if(!strcmp(df->name, "FIRST"))
+		{
+			lset(df->dat[1], ticketformat);
+			int fldPrintCounter = GetDbFieldNo(df ,_szPrintCounter);
+			if(fldPrintCounter > 0) 
+			{
+				ltodb(print, df, fldPrintCounter);
+			}
+		}
+		backup(df);
+		if(OneRecordOnly == TRUE) {                         //21.1.2009
+			if(df->m_strReplacePrimaryKey.GetLength()>0) {
+				DB adoTmp;
+				CString str;
+				
+				str.Format("select * from [%s] where [%s]='%s' and [%s] like '%s%%' ",
+					df->name, df->fieldName[1], adoString(df->m_strReplacePrimaryKey),df->fieldName[1],ticketprefix);
+				
+				BOOL flagOpen = ado(&adoTmp, "", NULL, str);
+				if(!flagOpen) return;
+				
+				if(adoTmp.t->sumrecord>0) {
+					adoTmp.read(1);
+					fetch(df, &adoTmp);
+					lset(df->dat[1],"NEW");
+				}
+				dclose(&adoTmp);
+			}
+		}
+		df->e->start(df);
+		df->e->InitialValue(df);
+		
+		if (IsOldPeriodLock()){
+			df->SaveFlag = SaveFlag = tmp_saveflag;			//must restore old flag 2019-09-13
+			return ;     // 3.9.2013
+		}
+		OnRecordDisplay();
+		SetAttribute(FALSE,TRUE);
+		
+		AssignReadOnlyFields();
+		SetReadOnlyFields();
+		//    backup(df);
+		HideNoUseButtonMenu();
+		int f_fld = GetFirstAvailableField();
+		GotoEdit(f_fld);
+		ShowSaveButton();
+		m_FirstSave = FALSE;
+		m_AddEdit = FALSE;
+		app->Footmark("  OnNew() - end");
+	
+}
+
+
+
+
