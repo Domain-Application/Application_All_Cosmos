@@ -446,6 +446,7 @@ void CNView::ShowInitFrame()
 	fg2.SetTitle("Trailer",1500);
     fg2.SetTitle("Date/Time In", 1600);
     fg2.SetTitle("Weight (kg)", 1100, 7);
+	fg.SetTitle("Ticket",1,1);
 }
 
 void CNView::SetActiveStatus(DB *df,long rec, int type)
@@ -473,7 +474,7 @@ void CNView::SetActiveStatus(DB *df,long rec, int type)
 	{
 		MGRID g(&m_grid2, df, rec);
 		g.show(rec);
-		g.SetText(df, 0, LORRY,WB_Container,WB_Trailer, TIMEIN, FIRST, -1);
+		g.SetText(df, 0, LORRY,WB_Container,WB_Trailer, TIMEIN, FIRST,1, -1);
 		return;
 	}
 }
@@ -632,7 +633,7 @@ void CNView::OnMouseDownMsflexgrid2(short Button, short Shift, long x, long y)
 	CString s;
 	
 	if(Button !=2) return;
-	RightClickGrid(m_grid2, 1, 2);
+	RightClickGrid(m_grid2, 6, 1);
 	
 }
 
