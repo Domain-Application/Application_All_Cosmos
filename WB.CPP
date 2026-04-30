@@ -487,20 +487,33 @@ void CWb::OnSetCompleteTicket()
 {
 	if(!strcmp(df->name, "FIRST")) 
 	{
-		CString strSQL,ticket;
+		CString strSQL,ticket, despatchTicketPrefix, receiveTicketPrefix;
 		DB *maintable;
 		DB sub_table;
 		CString tablename,msn,s;
 		ticket=df->dat[TICKET];
 		char prefix = ticket.GetAt(0);
+        
+        strSQL.Format("select top 1 [prefix] from [ticketno] where recordset = '%s'", despatch.name);
+        despatchTicketPrefix = SqlText(strSQL);
+        strSQL.Format("select top 1 [prefix] from [ticketno] where recordset = '%s'", receive_ticket_info.name);
+        receiveTicketPrefix = SqlText(strSQL);
 
-		if (prefix == 'D')
-		{
+        if(isblank(despatchTicketPrefix))
+        {
+            despatchTicketPrefix = _T("D");
+        }
+        if(isblank(receiveTicketPrefix))
+        {
+            receiveTicketPrefix = _T("K");
+        }
+		if (prefix == despatchTicketPrefix)
+		{   
 			maintable=&despatch;
 			tablename="DBDATA";
 			msn="Despatch";
 		}
-		else if(prefix == 'K')
+		else if(prefix == receiveTicketPrefix)
 		{
 			maintable=&wb;
 			tablename="WBDATA";

@@ -269,10 +269,11 @@ void CNView::OnCreateTCPServer(const CString& portFieldName)
 
     pInfo->port = newPort;
     pInfo->bRunning = TRUE;
-    pInfo->pThread = AfxBeginThread(ServerThreadFunc, pInfo);
+    pInfo->pThread = AfxBeginThread(ServerThreadFunc, pInfo, THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
     if (pInfo->pThread)
     {
         pInfo->pThread->m_bAutoDelete = FALSE;
+        pInfo->pThread->ResumeThread();
     }
 }
 
@@ -434,13 +435,14 @@ void CNView::ShowInitFrame()
 
     fg.SetTitle("Date/Time In",1500,4);
     fg.SetTitle("Weight (kg)",1100,7);
-    fg.SetTitle("Ticket",1,1);
+    fg.SetTitle("Ticket",1200,1);
 
     fg.SetTitle("W. Type",870,4);
     fg.SetTitle("Remarks", 3000, 1);
 	
 	MGRID fg2(&m_grid2, NULL, 0, 5);
     fg2.SetTitle("No", 500, 1);
+    fg2.SetTitle("Ticket",1200,1);
     fg2.SetTitle("Vehicle", 1500);
 	fg2.SetTitle("Container", 1500);
 	fg2.SetTitle("Trailer",1500);
@@ -474,7 +476,7 @@ void CNView::SetActiveStatus(DB *df,long rec, int type)
 	{
 		MGRID g(&m_grid2, df, rec);
 		g.show(rec);
-		g.SetText(df, 0, LORRY,WB_Container,WB_Trailer, TIMEIN, FIRST,1, -1);
+		g.SetText(df, 0, 1, LORRY,WB_Container,WB_Trailer, TIMEIN, FIRST, -1);
 		return;
 	}
 }

@@ -58,6 +58,19 @@ void CIt2::OnOK()
 			if(ID==IDNO) return;
 		}
 	}
+    compute_weight(df, sub);
+    // if(m[10] - df->val(SWT) <= 0)
+    // {
+    //     UINT ID = MessageBox("Cannot weighing!!!\n\nDo you want to continue?", "Supplier weight is more than theoretical weight", MB_ICONQUESTION | MB_YESNO);
+    //     if(ID==IDNO) return;
+    // }
+    // if(m[15] < 0)
+    // {
+    //     CString msg;
+    //     msg.Format("Supplier weight is more than theoretical weight");
+    //     int flag = UserPasswordLoginAccepted(df, 9, msg);
+    //     if(flag == 0) return;
+    // }
 
 	ReplaceRecord();
     
@@ -216,10 +229,10 @@ void CIt2::OnTimer(UINT nIDEvent)
     compute_weight(df,sub);
     dtoa(m[11],str,7,0);
     SetDlgItemText(IDC_PNET,putnum0(str));
-    dtoa(m[14],str,9,0);
+    dtoa(m[15],str,9,0);
     SetDlgItemText(IDC_VAR,putnum0(str));
-    dtoa(m[15],str,9,3);
-    SetDlgItemText(IDC_VAR2,putnum0(str));
+    // dtoa(m[15],str,9,3);
+    // SetDlgItemText(IDC_VAR2,putnum0(str));
     if(m_tt.Compare(df->dat[TT])) {
         UINT ID = df->dat[TT][0]=='Y' ? IDC_RADIO2 : IDC_RADIO1;
         CheckRadioButton( IDC_RADIO1, IDC_RADIO2, ID);

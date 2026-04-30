@@ -99,6 +99,14 @@ int receive_save(DB *df,int flagi)
     if( df->val(PM1WT)==0) {
         lset(df->dat[PM1TIME],"");
     }
+    compute_weight(df, df->sub);
+    if(m[15] < 0)
+    {
+        CString msg;
+        msg.Format("Supplier weight is more than theoretical weight");
+        int flag = UserPasswordLoginAccepted(df, 9, msg);
+        if(flag == 0) return 0;
+    }
     return 1;
 }
 
