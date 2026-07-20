@@ -56,7 +56,7 @@ void CIt1::OnOK()
     if (IsSaveConditionOk(df)==0) return;
 
     int key = GetCheckedRadioButton(IDC_RADIO1,IDC_RADIO2);
-    push_plateno2.Format("");
+    ((CMenuApp*)AfxGetApp())->SetPushPlateno2("");
     if(program4 == 2) {
 		CDialog::OnOK();
     }
@@ -250,7 +250,7 @@ void CIt1::OnSnapshots()
          if(m_jpg[i].Load( file )) {
 			 InvalidateRect( PreviewRect[i] );
 		 }
-		 RestMsg();
+		 //RestMsg();
 	}
     UpdateData(FALSE);
 	

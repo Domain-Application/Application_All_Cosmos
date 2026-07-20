@@ -240,7 +240,7 @@ void CTriggerLPR::Save2loglpr(const char *plateno1,int no)
 	szDirection[0] = '0'+direction;
 /*
 	s.Format("Insert into LogLPR (plateno,push_plateno1,push_plateno2,weight,DIRECTION,wb,[DeviceIndex],mode) values ('%s','%s','%s',%ld,'%s',%i,%i,'C')", 
-		plateno1, push_plateno1, push_plateno2,cweight, szDirection, program4,no);
+		plateno1, ((CMenuApp*)AfxGetApp())->GetPushPlateno1(), ((CMenuApp*)AfxGetApp())->GetPushPlateno2(),cweight, szDirection, program4,no);
 	Runsql(s);
 */
 }

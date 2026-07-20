@@ -1,3 +1,4 @@
+
 // It2.cpp : implementation file
 //
  
@@ -7,6 +8,7 @@
 #include "Security.h"
 #include "comm.h"
 #include "nview.h"
+#include "Reqitem.h"
  
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -37,6 +39,38 @@ void CIt2::DoDataExchange(CDataExchange* pDX)
     if (GetDlgItem(IDC_MSFLEXGRID1))
         DDX_Control(pDX, IDC_MSFLEXGRID1, m_grid1);
     //}}AFX_DATA_MAP
+}
+
+BEGIN_EVENTSINK_MAP(CIt2, CFEdit)
+ON_EVENT(CIt2, IDC_MSFLEXGRID1, -601 /* DblClick */, OnDblClickMsflexgrid1, VTS_NONE)
+END_EVENTSINK_MAP()
+
+void CIt2::OnDblClickMsflexgrid1()
+{
+    DB adoTmp;
+    CString strSQL;
+    int rec;
+    rec = m_grid1.GetMouseRow();
+    if(rec == 0)
+    {
+        return;
+    }
+    strSQL.Format("select * from fdata where REFNO = '%s' and sqno = '%d'", df->dat[1], rec);
+    ado(&adoTmp, "fdata", NULL, strSQL);
+    readrec(1, &adoTmp);
+    CReqitem d2(IDD_DBDATA,df,&adoTmp,1);
+    d2.ExistRecordNo  = 1;
+    int flag = d2.DoModal();
+    if(flag == IDCANCEL)
+    {
+        dclose(&adoTmp);
+        return;
+    }
+    waitflock(&adoTmp);
+    adoTmp.Update();
+    unflock(&adoTmp);
+    dclose(&adoTmp);
+    OnRefresh();
 }
  
  
@@ -76,7 +110,7 @@ void CIt2::OnOK()
     
     if (IsSaveConditionOk(df)==0) return;
     int key = GetCheckedRadioButton(IDC_RADIO1,IDC_RADIO2);
-    push_plateno2.Format("");
+    ((CMenuApp*)AfxGetApp())->SetPushPlateno2("");
     if(program4 == 1) {
 		CDialog::OnOK();
     }
@@ -206,7 +240,7 @@ void CIt2::OnSnapshots()
          if(m_jpg[i].Load( file )) {
 			 InvalidateRect( PreviewRect[i] );
 		 }
-		 RestMsg();
+		 //RestMsg();
 	}
     UpdateData(FALSE);
 }

@@ -12,6 +12,7 @@
 #include "It1.h"
 #include "ShowJpg.h"
 #include <afxinet.h> 
+#include <vector>
 // #include "ANPRListener.h"
 
 #ifdef _DEBUG
@@ -22,7 +23,6 @@ static char THIS_FILE[] = __FILE__;
 
 /////////////////////////////////////////////////////////////////////////////
 // CSecurity dialog
-
 
 CSecurity::CSecurity(CWnd* pParent /*=NULL*/)
     : CFM20Dlg(CSecurity::IDD, pParent)
@@ -86,6 +86,7 @@ END_MESSAGE_MAP()
 
 UINT PhotoThreadProc(LPVOID pParam)
 {
+	log_proceeding("start thread");
     PhotoThreadParam* p = (PhotoThreadParam*)pParam;
     CMenuApp* app = (CMenuApp*)AfxGetApp(); 
 
@@ -98,19 +99,21 @@ UINT PhotoThreadProc(LPVOID pParam)
 		ActualFile.Format("%s\\plate0%d.jpg",CString(p->picFolder),i);
         ::DeleteFile(ActualFile);
         // Blocking camera call
+		log_proceeding("Start Get Plate No");
         int flag = app->OnGetPlateNo(i, plateno1, option, p->picFolder);
+		log_proceeding("End Get Plate No");
         
         CString file(p->strPhoto[i-1]);
         
         CString* pResultStr = new CString();
         
         bool doSnapshot = false;
-        if( (i == 1 && !push_plateno1.IsEmpty()) || (i == 2 && !push_plateno2.IsEmpty()) || i == 3 )
+        if( (i == 1 && !app->GetPushPlateno1().IsEmpty()) || (i == 2 && !app->GetPushPlateno2().IsEmpty()) || i == 3 )
         {
              app->OnSnapshot(i, file);
              
-             if(i == 1) *pResultStr = push_plateno1;
-             else if(i == 2) *pResultStr = push_plateno2;
+             if(i == 1) *pResultStr = app->GetPushPlateno1();
+             else if(i == 2) *pResultStr = app->GetPushPlateno2();
         }
         else if (i == 1)
         {
@@ -132,7 +135,7 @@ UINT PhotoThreadProc(LPVOID pParam)
     
     // Signal completion with 0
     ::PostMessage(p->hWnd, WM_PHOTO_PROCESSED, 0, 0);
-    
+    log_proceeding("end thread");
     delete p;
     return 0;
 }
@@ -149,12 +152,12 @@ void CSecurity::OnDestroy()
 	KillTimer(2);
 	KillTimer(9001);
 	//If not removing this while closing the system. System will keep remaining the container number in motion detect while container reverse and tanker coming in
-	if(!isblank(push_plateno2))
+	if(!isblank(((CMenuApp*)AfxGetApp())->GetPushPlateno2()))
 	{
 		UINT ID = MessageBox("Closing will remove detected container number from motion detect","Confirm it", MB_ICONQUESTION | MB_YESNO);
 		if(ID==IDYES) 
 		{
-			push_plateno2.Format(""); //20251218
+			((CMenuApp*)AfxGetApp())->SetPushPlateno2(""); //20251218
 		}
 	}
 	
@@ -174,6 +177,7 @@ BOOL isManualSetting()
 
 BOOL CSecurity::OnInitDialog() 
 {
+	log_proceeding("Start Init Dialog");
     CFM20Dlg::OnInitDialog();
     SetWindowLocation( this );
 
@@ -181,6 +185,7 @@ BOOL CSecurity::OnInitDialog()
     SetTimer(1,100,NULL);
     SetTimer(3, 200, NULL);
     SetupIcons();
+    OnTakePhotos();
     for(int i=1; i<=10;i++) {
         CWnd* previewWnd = GetDlgItem(IDC_PREVIEW+i-1);
         if(!previewWnd) continue;
@@ -209,12 +214,14 @@ BOOL CSecurity::OnInitDialog()
 		q->SetReadOnly(FALSE);
 		q->SetFocus();
 	}
+	log_proceeding("End InitDialog");
 	return TRUE;  // return TRUE unless you set the focus to a control
 	              // EXCEPTION: OCX Property Pages should return FALSE
 }
 
 void CSecurity::OnGW()
 {
+	log_proceeding("Start Gw");
     char tmp[80];
 
 	if(cweight==-1) {
@@ -233,6 +240,7 @@ void CSecurity::OnGW()
     HWND hWnd2 = ::GetDlgItem( GetSafeHwnd(), IDC_STABLE_FLAG);
     BST = flagStable ? BST_CHECKED : BST_UNCHECKED;
     ::SendMessage(hWnd2, BM_SETCHECK, BST, 0L);
+	log_proceeding("End Gw");
 }
 
 void CSecurity::OnTimer(UINT nIDEvent) 
@@ -254,7 +262,7 @@ void CSecurity::OnTimer(UINT nIDEvent)
 	}
     else if(nIDEvent==2) {
 		KillTimer(nIDEvent);
-		OnTakePhotos();
+		//OnTakePhotos();
 		GetDlgItem(IDOK)->EnableWindow(TRUE);
 		return;
 	}
@@ -467,8 +475,8 @@ void CSecurity::ProcessCameraRequest(int nIndex)
             
             if (dwRet == HTTP_STATUS_OK) {
                 DWORD dwBufSize = 2097152; // 2MB
-                pBuf = new char[dwBufSize];
-                char* pCurr = pBuf;
+                std::vector<char> vBuf(dwBufSize);
+                char* pCurr = &vBuf[0];
                 while (dwTotalSize < dwBufSize) {
                      DWORD dwBytesToRead = (dwBufSize - dwTotalSize < 8192) ? (dwBufSize - dwTotalSize) : 8192;
                      UINT nRead = pFile->Read(pCurr, dwBytesToRead);
@@ -476,45 +484,42 @@ void CSecurity::ProcessCameraRequest(int nIndex)
                      dwTotalSize += nRead;
                      pCurr += nRead;
                 }
+
+                if (dwTotalSize > 0) {
+                    // Extract text part for XML processing
+                    int nTextLen = (dwTotalSize > 20000) ? 20000 : (int)dwTotalSize;
+                    CString strContent(&vBuf[0], nTextLen);
+
+                    CString strPlate, strContainer;
+                    int res = ProcessAnprXml(strContent, strPlate, strContainer);
+
+                    if (nIndex == 1 && (res & ANPR_RESULT_PLATE)) {
+                        if (k == 0) strResultNumA = strPlate;
+                        else strResultNumB = strPlate;
+                        title = _T("Trigger License Plate Recognition");
+                    } else if (nIndex == 2 && (res & ANPR_RESULT_CONTAINER)) {
+                        if (k == 0) strResultNumA = strContainer;
+                        else strResultNumB = strContainer;
+                        title = _T("Trigger Container Number Recognition");
+                    }
+
+                    // Save images
+                    ExtractMultipartImage(&vBuf[0], dwTotalSize, "detectionPicture.jpg", strFullImgPath);
+                    ExtractMultipartImage(&vBuf[0], dwTotalSize, "licensePlatePicture.jpg", strCropImgPath);
+
+                    if (k == 0) {
+                        strCamACrop = strCropImgPath;
+                        strCamAFull = strFullImgPath;
+                    } else {
+                        strCamBCrop = strCropImgPath;
+                        strCamBFull = strFullImgPath;
+                    }
+                }
             }
         } catch (CInternetException* pEx) { pEx->Delete(); }
+        catch (CMemoryException* pEx) { pEx->Delete(); }
+        catch (...) { }
 
-        if (dwTotalSize > 0 && pBuf) {
-            CString strContent;
-            int nTextLen = (dwTotalSize > 20000) ? 20000 : (int)dwTotalSize;
-            char* pTemp = new char[nTextLen + 1];
-            memcpy(pTemp, pBuf, nTextLen);
-            pTemp[nTextLen] = 0;
-            strContent = pTemp;
-            delete[] pTemp;
-
-            CString strPlate, strContainer;
-            int res = ProcessAnprXml(strContent, strPlate, strContainer);
-
-            if (nIndex == 1 && (res & ANPR_RESULT_PLATE)) {
-                if (k == 0) strResultNumA = strPlate;
-                else strResultNumB = strPlate;
-                title = _T("Trigger License Plate Recognition");
-            } else if (nIndex == 2 && (res & ANPR_RESULT_CONTAINER)) {
-                if (k == 0) strResultNumA = strContainer;
-                else strResultNumB = strContainer;
-                title = _T("Trigger Container Number Recognition");
-            }
-
-            // Save images
-            ExtractMultipartImage(pBuf, dwTotalSize, "detectionPicture.jpg", strFullImgPath);
-            ExtractMultipartImage(pBuf, dwTotalSize, "licensePlatePicture.jpg", strCropImgPath);
-
-            if (k == 0) {
-                strCamACrop = strCropImgPath;
-                strCamAFull = strFullImgPath;
-            } else {
-                strCamBCrop = strCropImgPath;
-                strCamBFull = strFullImgPath;
-            }
-        }
-
-        if (pBuf) delete[] pBuf;
         if (pFile) { pFile->Close(); delete pFile; }
         if (pConnection) { pConnection->Close(); delete pConnection; }
         session.Close();
@@ -587,6 +592,7 @@ void CSecurity::SaveImages(DB *df,const char *JPGKEY)
 
 void CSecurity::OnTakePhotos() 
 {
+	log_proceeding("Start Take Photo");
     // Disable UI to prevent re-entrancy
     GetDlgItem(IDOK)->EnableWindow(FALSE);
     GetDlgItem(IDC_BUTTON3)->EnableWindow(FALSE);
@@ -604,6 +610,7 @@ void CSecurity::OnTakePhotos()
     m_progress.SetPos(0);
     
     AfxBeginThread(PhotoThreadProc, p);
+	log_proceeding("End Take Photo");
 }
 
 LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)

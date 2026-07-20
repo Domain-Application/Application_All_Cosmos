@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MD /W2 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MD /W2 /GX /Zi /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /FR /Yu"stdafx.h" /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /o "NUL" /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
@@ -53,7 +53,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /machine:I386
-# ADD LINK32 wlib32.lib wininet.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib:"libc.lib"
+# ADD LINK32 wlib32.lib wininet.lib /nologo /subsystem:windows /incremental:yes /debug /machine:I386 /nodefaultlib:"libc.lib"
 # SUBTRACT LINK32 /profile
 
 !ELSEIF  "$(CFG)" == "menu - Win32 Debug"
@@ -166,6 +166,10 @@ SOURCE=.\menu.rc
 # Begin Source File
 
 SOURCE=.\MENUVIEW.CPP
+# End Source File
+# Begin Source File
+
+SOURCE=.\MYCCTV.CPP
 # End Source File
 # Begin Source File
 
@@ -319,6 +323,46 @@ SOURCE=.\ReadMe.txt
 # End Source File
 # End Target
 # End Project
+# Section menu : {D7053240-CE69-11CD-A777-00DD01143C57}
+# 	2:21:DefaultSinkHeaderFile:commandbutton.h
+# 	2:16:DefaultSinkClass:CCommandButton
+# End Section
+# Section menu : {7BF80981-BF32-101A-8BBB-00AA00300CAB}
+# 	2:5:Class:CPicture
+# 	2:10:HeaderFile:picture1.h
+# 	2:8:ImplFile:picture1.cpp
+# End Section
+# Section menu : {B09DE715-87C1-11D1-8BE3-0000F8754DA1}
+# 	2:21:DefaultSinkHeaderFile:animation.h
+# 	2:16:DefaultSinkClass:CAnimation
+# End Section
+# Section menu : {8BD21D10-EC42-11CE-9E0D-00AA006002F3}
+# 	2:21:DefaultSinkHeaderFile:mdctext.h
+# 	2:16:DefaultSinkClass:CMdcText
+# End Section
+# Section menu : {04598FC1-866C-11CF-AB7C-00AA00C08FCF}
+# 	2:5:Class:CLabelControl
+# 	2:10:HeaderFile:labelcontrol1.h
+# 	2:8:ImplFile:labelcontrol1.cpp
+# End Section
+# Section menu : {648A5600-2C6E-101B-82B6-000000000014}
+# 	2:21:DefaultSinkHeaderFile:mscomm.h
+# 	2:16:DefaultSinkClass:CMSComm
+# End Section
+# Section menu : {C932BA85-4374-101B-A56C-00AA003668DC}
+# 	2:21:DefaultSinkHeaderFile:msmask1.h
+# 	2:16:DefaultSinkClass:CMSMask
+# End Section
+# Section menu : {E6E17E90-DF38-11CF-8E74-00A0C90F26F8}
+# 	2:5:Class:CMSComm
+# 	2:10:HeaderFile:mscomm.h
+# 	2:8:ImplFile:mscomm.cpp
+# End Section
+# Section menu : {9F6AA700-D188-11CD-AD48-00AA003C9CB6}
+# 	2:5:Class:CRowCursor
+# 	2:10:HeaderFile:rowcursor.h
+# 	2:8:ImplFile:rowcursor.cpp
+# End Section
 # Section menu : {8BD21D13-EC42-11CE-9E0D-00AA006002F3}
 # 	2:5:Class:CMdcText
 # 	2:10:HeaderFile:mdctext.h
@@ -363,44 +407,4 @@ SOURCE=.\ReadMe.txt
 # 	2:5:Class:CMSMask
 # 	2:10:HeaderFile:msmask1.h
 # 	2:8:ImplFile:msmask1.cpp
-# End Section
-# Section menu : {D7053240-CE69-11CD-A777-00DD01143C57}
-# 	2:21:DefaultSinkHeaderFile:commandbutton.h
-# 	2:16:DefaultSinkClass:CCommandButton
-# End Section
-# Section menu : {7BF80981-BF32-101A-8BBB-00AA00300CAB}
-# 	2:5:Class:CPicture
-# 	2:10:HeaderFile:picture1.h
-# 	2:8:ImplFile:picture1.cpp
-# End Section
-# Section menu : {B09DE715-87C1-11D1-8BE3-0000F8754DA1}
-# 	2:21:DefaultSinkHeaderFile:animation.h
-# 	2:16:DefaultSinkClass:CAnimation
-# End Section
-# Section menu : {8BD21D10-EC42-11CE-9E0D-00AA006002F3}
-# 	2:21:DefaultSinkHeaderFile:mdctext.h
-# 	2:16:DefaultSinkClass:CMdcText
-# End Section
-# Section menu : {04598FC1-866C-11CF-AB7C-00AA00C08FCF}
-# 	2:5:Class:CLabelControl
-# 	2:10:HeaderFile:labelcontrol1.h
-# 	2:8:ImplFile:labelcontrol1.cpp
-# End Section
-# Section menu : {648A5600-2C6E-101B-82B6-000000000014}
-# 	2:21:DefaultSinkHeaderFile:mscomm.h
-# 	2:16:DefaultSinkClass:CMSComm
-# End Section
-# Section menu : {C932BA85-4374-101B-A56C-00AA003668DC}
-# 	2:21:DefaultSinkHeaderFile:msmask1.h
-# 	2:16:DefaultSinkClass:CMSMask
-# End Section
-# Section menu : {E6E17E90-DF38-11CF-8E74-00A0C90F26F8}
-# 	2:5:Class:CMSComm
-# 	2:10:HeaderFile:mscomm.h
-# 	2:8:ImplFile:mscomm.cpp
-# End Section
-# Section menu : {9F6AA700-D188-11CD-AD48-00AA003C9CB6}
-# 	2:5:Class:CRowCursor
-# 	2:10:HeaderFile:rowcursor.h
-# 	2:8:ImplFile:rowcursor.cpp
 # End Section

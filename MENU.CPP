@@ -348,23 +348,26 @@ int CMenuApp::SetAlarmChannel(int iCamera)
 }
 
 int iGetPlateSuccess = 0;
-CString ord_lpn_no,ord_iu_no,ai_plate_no;
 int CMenuApp::OnGetPlateNo(int id,CString &plateno,int option,const char *picFolder)
 {
-    int flagGetPlateNo = CMyCctvApp::OnGetPlateNo( id, ord_lpn_no,  option, picFolder);
+    int flagGetPlateNo = CMyCctvApp::OnGetPlateNo( id, plateno,  option, picFolder);
 
-	ord_lpn_no.TrimRight();
-
-	plateno = ord_lpn_no;
+	plateno.TrimRight();
 
     return flagGetPlateNo;
 }
 
-CString push_plateno = "";
-CString push_plateno1 = "";
-CString push_plateno2 = "";
-CString msg_plateno1 = "";
-CString msg_plateno2 = "";
+void CMenuApp::SetPushPlateno(const CString& val) { CSingleLock lock(&m_csPlateNo, TRUE); m_push_plateno = val; }
+CString CMenuApp::GetPushPlateno() { CSingleLock lock(&m_csPlateNo, TRUE); return m_push_plateno; }
+void CMenuApp::SetPushPlateno1(const CString& val) { CSingleLock lock(&m_csPlateNo, TRUE); m_push_plateno1 = val; }
+CString CMenuApp::GetPushPlateno1() { CSingleLock lock(&m_csPlateNo, TRUE); return m_push_plateno1; }
+void CMenuApp::SetPushPlateno2(const CString& val) { CSingleLock lock(&m_csPlateNo, TRUE); m_push_plateno2 = val; }
+CString CMenuApp::GetPushPlateno2() { CSingleLock lock(&m_csPlateNo, TRUE); return m_push_plateno2; }
+void CMenuApp::SetMsgPlateno1(const CString& val) { CSingleLock lock(&m_csPlateNo, TRUE); m_msg_plateno1 = val; }
+CString CMenuApp::GetMsgPlateno1() { CSingleLock lock(&m_csPlateNo, TRUE); return m_msg_plateno1; }
+void CMenuApp::SetMsgPlateno2(const CString& val) { CSingleLock lock(&m_csPlateNo, TRUE); m_msg_plateno2 = val; }
+CString CMenuApp::GetMsgPlateno2() { CSingleLock lock(&m_csPlateNo, TRUE); return m_msg_plateno2; }
+
 CString plateno = "";
 CString lprno = "";
 CString licence_plate_picture;
@@ -374,44 +377,47 @@ int lpr_detected_number[2];
 void CMenuApp::LprDetected(const char *no,int CameraIndex)
 {
 	
-    push_plateno = no;
-    push_plateno.TrimRight();
-    if(push_plateno.GetLength()<=0){
+    SetPushPlateno(no);
+    CString tmp_push_plateno = GetPushPlateno();
+    tmp_push_plateno.TrimRight();
+    SetPushPlateno(tmp_push_plateno);
+    if(tmp_push_plateno.GetLength()<=0){
 		return;
 	}
 	
-    if( !IsStringContainDigi(push_plateno) ) {
+    if( !IsStringContainDigi(tmp_push_plateno) ) {
 		return;
     }
 	
 #ifdef _DEBUG
-	if(!push_plateno.CompareNoCase("unknown")) {
-		push_plateno =  test_plateno;        //for testing only
+	if(!tmp_push_plateno.CompareNoCase("unknown")) {
+		tmp_push_plateno =  test_plateno;        //for testing only
+        SetPushPlateno(tmp_push_plateno);
 	}
 #endif //_DEBUG
 	
 	
-	if(!push_plateno.CompareNoCase("unknown")) {
-		push_plateno = "";
+	if(!tmp_push_plateno.CompareNoCase("unknown")) {
+		SetPushPlateno("");
 		return;
 	}
 	else {
-		int len = strlen(push_plateno);
+		int len = strlen(tmp_push_plateno);
 		if(len<4) {
-			push_plateno = "";
+			SetPushPlateno("");
 			return;
 		} 
 		
 		//singapore plate only
 		//        push_plateno = AIPlateno(push_plateno);		
         
-		if( !IsPlateNo( push_plateno ) ) {
-			push_plateno = "";
+		if( !IsPlateNo( tmp_push_plateno ) ) {
+			SetPushPlateno("");
 			return;
 		}
 		
-		if(isblank(push_plateno)) {
-			push_plateno = "";
+		if(isblank(tmp_push_plateno)) {
+			SetPushPlateno("");
 			return;
 		}
 		
@@ -420,13 +426,19 @@ void CMenuApp::LprDetected(const char *no,int CameraIndex)
 		char szDirection[2] = {0};
 		
 		if(CameraIndex==1) {
-			push_plateno1.Format("%s",  push_plateno);
-			msg_plateno1.Format("%s %s LPR", TimeNowMs(), push_plateno);
+            CString str;
+			str.Format("%s", tmp_push_plateno);
+            SetPushPlateno1(str);
+            str.Format("%s %s LPR", TimeNowMs(), tmp_push_plateno);
+            SetMsgPlateno1(str);
 			direction = 1;
 		}
         else if(CameraIndex==2) {
-			push_plateno2.Format("%s",  push_plateno);
-			msg_plateno2.Format("%s %s CNR", TimeNowMs(), push_plateno);
+            CString str;
+			str.Format("%s", tmp_push_plateno);
+            SetPushPlateno2(str);
+            str.Format("%s %s CNR", TimeNowMs(), tmp_push_plateno);
+            SetMsgPlateno2(str);
 			direction = 2;
 		}
 	}

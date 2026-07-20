@@ -318,6 +318,7 @@
 #define IDC_BR1Close                    1272
 #define IDC_SNAPSHOTS                   1273
 #define IDC_BR1Open                     1274
+#define IDC_EDIT_DETAIL                 1274
 #define IDC_BR2Open                     1275
 #define IDC_L5                          1276
 #define IDC_L6                          1277

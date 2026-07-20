@@ -15,6 +15,7 @@
 #include "resource.h"       // main symbols
 #include "myapp.h"       // main symbols
 #include <Tan.h>       // main symbols
+#include <afxmt.h>
 //{{AFX_INCLUDES()
 #include "msflexgrid.h"
 #include "mycctv.h"
@@ -34,7 +35,6 @@ extern DB despatch_ticket_info, receive_ticket_info;
 extern BOOL DeletePic(const char *file);
 extern BOOL isWBDualMode();
 extern BOOL isManualSetting();
-extern CString push_plateno1,push_plateno2;
 extern DB  reason,bin;
 extern DB  weighbrige;
 extern void init_weighbrige(DB *df);
@@ -212,6 +212,25 @@ public:
     virtual void LprLog(const char *no,int CameraIndex,const char *platePhoto,int mode);
     virtual void AddLog(int iDeviceIndex, int iLogType, const char* format, ...);
     virtual BOOL IsHasSingleTask();
+
+public:
+    CCriticalSection m_csPlateNo;
+    CString m_push_plateno;
+    CString m_push_plateno1;
+    CString m_push_plateno2;
+    CString m_msg_plateno1;
+    CString m_msg_plateno2;
+    
+    void SetPushPlateno(const CString& val);
+    CString GetPushPlateno();
+    void SetPushPlateno1(const CString& val);
+    CString GetPushPlateno1();
+    void SetPushPlateno2(const CString& val);
+    CString GetPushPlateno2();
+    void SetMsgPlateno1(const CString& val);
+    CString GetMsgPlateno1();
+    void SetMsgPlateno2(const CString& val);
+    CString GetMsgPlateno2();
 };
 /////////////////////////////////////////////////////////////////////////////
 

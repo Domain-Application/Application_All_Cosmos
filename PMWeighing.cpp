@@ -113,7 +113,7 @@ void CPMWeighing::OnTimer(UINT nIDEvent)
 void CPMWeighing::OnOK() 
 {
     int key = GetCheckedRadioButton(IDC_RADIO1,IDC_RADIO2);
-	push_plateno2.Format("");
+	((CMenuApp*)AfxGetApp())->SetPushPlateno2("");
     if(key==IDC_RADIO1) {
 		CReqitem::OnOK();
     }

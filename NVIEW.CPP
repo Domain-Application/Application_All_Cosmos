@@ -63,6 +63,7 @@ void RecordStatusLog(const CString str)//Ver 2.05
 
  LRESULT CNView::OnNewMessage(WPARAM wParam, LPARAM lParam)
 {
+    log_proceeding("Start On New Message");
     ServerInfo* pInfo = (ServerInfo*)wParam;
     CString* pStr = (CString*)lParam;
     if (!pInfo || !pStr) return 0;
@@ -105,17 +106,18 @@ void RecordStatusLog(const CString str)//Ver 2.05
             RecordStatusLog(strLog);
             if(ValidateISO6346(strContainer))
             {
-                push_plateno2.Format("%s", strContainer);
+                ((CMenuApp*)AfxGetApp())->SetPushPlateno2(strContainer);
             }
             bFound = TRUE;
         }
     }
-
+    log_proceeding("End On New Message");
     return 0;
 }
 
 UINT __cdecl ServerThreadFunc(LPVOID pParam)
 {
+    log_proceeding("Start serverThreadFunc");
     ServerInfo* pInfo = (ServerInfo*)pParam;
     if (!pInfo) return 0;
 
@@ -181,6 +183,7 @@ UINT __cdecl ServerThreadFunc(LPVOID pParam)
 
     server.Close();
     pInfo->pServer = NULL;
+    log_proceeding("End serverThreadFunc");
     return 0;
 }
 
@@ -322,6 +325,7 @@ void CNView::InitiateDualMode()
 
 void CNView::OnInitialUpdate()
 {
+    log_proceeding("Start Initial Update");
 	app->picFolder.Format("c:\\data");
 	CreateDirectory(app->picFolder, NULL);
     CCctvView::OnInitialUpdate();
@@ -331,8 +335,11 @@ void CNView::OnInitialUpdate()
 	OnRadio1();
     ShowInitFrame();
     ShowInformation();
+    log_proceeding("Start Create TCP 1");
     OnCreateTCPServer("ANPR_PORT");
+    log_proceeding("End Create TCP 1");
     OnCreateTCPServer("ANPR_PORT2");
+    log_proceeding("End Initial Update");
 }
 
 int CNView::OnGw()
@@ -448,7 +455,6 @@ void CNView::ShowInitFrame()
 	fg2.SetTitle("Trailer",1500);
     fg2.SetTitle("Date/Time In", 1600);
     fg2.SetTitle("Weight (kg)", 1100, 7);
-	fg.SetTitle("Ticket",1,1);
 }
 
 void CNView::SetActiveStatus(DB *df,long rec, int type)
@@ -568,12 +574,15 @@ BOOL CNView::CopyPhotoToServer(int jpgkey)
 //FIXME: disabling the button causing unable to continue pressing it
 void log_proceeding(const char *msg)
 {
-    FILE *ptr = log_file("trc");
-    if(!ptr) return;
-
-    fprintf(ptr,"%s %s\n", nowMs(), msg);
-
-    fclose(ptr);
+    CString strWB, strFileName, str;
+    str.Format("Time: %s Message: %s\n", now(), msg);
+    strFileName.Format("status%s.trc", &today[2]);
+    FILE *ptr = fopen(strFileName, "a");
+    if (ptr)
+    {
+        fprintf(ptr, str);
+        fclose(ptr);
+    }
 }
 
 void CNView::OnButton1() 
@@ -635,7 +644,7 @@ void CNView::OnMouseDownMsflexgrid2(short Button, short Shift, long x, long y)
 	CString s;
 	
 	if(Button !=2) return;
-	RightClickGrid(m_grid2, 6, 1);
+	RightClickGrid(m_grid2, 1, 2);
 	
 }
 
