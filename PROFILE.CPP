@@ -40,6 +40,8 @@ BEGIN_MESSAGE_MAP(CProfile, CStaff)
     ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BUTTON1, OnButton1)
 	ON_BN_CLICKED(IDC_BUTTON2, OnGWST)
+	ON_BN_CLICKED(IDC_ACS_KELULI, OnSiteKeluli)
+	ON_BN_CLICKED(IDC_ACS_SUASA, OnSiteSuasa)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -48,6 +50,36 @@ END_MESSAGE_MAP()
 void CProfile::ShowInformation()
 {
     CStaff::ShowInformation();
+    ShowSite();
+}
+
+// SITE_CODE (hidden IDC_EDIT27) is shown and set through the Keluli / Suasa radio buttons.
+void CProfile::ShowSite()
+{
+    CString site;
+    GetDlgItemText(IDC_EDIT27, site);
+    site.TrimRight();
+    CheckDlgButton(IDC_ACS_KELULI, site.CompareNoCase("KELULI") == 0);
+    CheckDlgButton(IDC_ACS_SUASA, site.CompareNoCase("SUASA") == 0);
+}
+
+void CProfile::SetSite(const char *site)
+{
+    CWnd *p = GetDlgItem(IDC_EDIT27);
+    if(p->IsWindowEnabled() && !(p->GetStyle() & ES_READONLY)) {
+        p->SetWindowText(site);
+    }
+    ShowSite();
+}
+
+void CProfile::OnSiteKeluli()
+{
+    SetSite("KELULI");
+}
+
+void CProfile::OnSiteSuasa()
+{
+    SetSite("SUASA");
 }
 
 

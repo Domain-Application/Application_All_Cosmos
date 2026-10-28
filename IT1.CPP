@@ -7,6 +7,7 @@
 #include "comm.h"
 #include "nview.h"
 #include "It1.h"
+#include "AllcosmosTicketMapping.h"
  
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -52,6 +53,9 @@ END_MESSAGE_MAP()
  
 void CIt1::OnOK()
 {
+	GetDlgItemText(IDC_ACS_PONO, m_poDo);
+	m_poDo.TrimLeft();
+	m_poDo.TrimRight();
 	ReplaceRecord();
     if (IsSaveConditionOk(df)==0) return;
 
@@ -74,7 +78,9 @@ BOOL CIt1::OnInitDialog()
         t = "Despatch Weighing";
 		SetDlgItemText( StaticId(CUST), "Customer");
 		SetDlgItemText( StaticId(SWT), "Buyer Weight");
+		SetDlgItemText( IDC_ACS_PONO_LABEL, "DO No");
     }
+	((CEdit*)GetDlgItem(IDC_ACS_PONO))->LimitText(fdata.fieldLength[iType==2 ? Wd_DO : Wd_PO1]);
 	SetDlgItemText( IDC_TITLE, t);
 
     CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO1);
@@ -121,6 +127,17 @@ void CIt1::OnTimer(UINT nIDEvent)
     }
 
     CFEdit::OnTimer(nIDEvent);
+}
+
+// Detail line 1 of a new ticket, holding the PO No (receiving) or DO No (despatch) typed at the first weight.
+static void AddFirstDetailLine(DB *df, int type, const CString &poDo)
+{
+	lsetblank(&fdata);
+	lset(fdata.dat[1], df->dat[TICKET]);
+	ltodb(1, &fdata, Wd_SQNO);
+	lset(fdata.dat[type==2 ? Wd_DO : Wd_PO1], poDo);
+	lset(fdata.dat[Wd_PT], df->dat[PT]);
+	fdata.AddNew();
 }
 
 BOOL CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
@@ -194,6 +211,10 @@ BOOL CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
 	df->SetCurrentTime(Date);
     df->AddNew();
 	IsZeroWt = FALSE;
+	if(!h.m_poDo.IsEmpty()) {
+		AddFirstDetailLine(df, type, h.m_poDo);
+		AllcosmosWeighIn(df, type);
+	}
 	return TRUE;
 }
 

@@ -112,6 +112,9 @@ extern void PrintProductCode(long irec,FILE *ptr,DB *df);
 extern void PrintDriverCode(long irec,FILE *ptr,DB *df);
 extern double m[16];
 extern void compute_weight(DB *df, DB *sub);
+class MGRID;
+extern void SetDetailGridTitles(MGRID &fg);
+extern void SetDetailGridRow(MGRID &fg, DB *sub);
 extern void SalesContractUpdateReport();
 extern int repct(char *Menu,int IdxItem,long irec,DB *df);
 extern void init_gst(DB *df);
@@ -169,8 +172,11 @@ enum pmtdat {Pm_REFNO=1,Pm_PMNO,Pm_DATE,Pm_TICKET,Pm_TIMEIN,Pm_WEIGHT,Pm_DIRECTI
 #define FIRST  PGROSS
 #define SECOND PTARE
 
-enum wbdata {Wd_DO=3,Wd_PO1,Wd_PO2,Wd_PQTY,Wd_PT,Wd_QTY,Wd_UNIT,Wd_PACKING,
-             Wd_UW,Wd_NoPallet,Wd_PalletWt,Wd_TW,Wd_PKKEY};
+enum wbdata {Wd_SQNO=2,Wd_DO,Wd_PO1,Wd_PO2,Wd_PQTY,Wd_PT,Wd_QTY,Wd_UNIT,Wd_PACKING,
+             Wd_UW,Wd_NoPallet,Wd_PalletWt,Wd_TW,
+             Wd_GROSS_WEIGHT,Wd_TOTAL_LOADING_TONNAGE,Wd_PALLET_QTY,Wd_BAG_QTY,
+             Wd_EMPTY_IMAGE_KEY,Wd_LOADED_IMAGE_KEY,Wd_ADDED_DATE,Wd_ADDED_BY,Wd_REMARK,
+             Wd_DO_QTY,Wd_BIN_LOCATION};
 enum prodtype {PT_CODE=1,PT_DECRIPT,PT_REMARKS,PT_PACKING};
 enum accode {CU_CODENO=1,CU_CUSTOMER,CU_SNAME,CU_ADD1,CU_ADD2,CU_ADD3,
             CU_TEL,CU_FAX,CU_POLAR,CU_EXPIRY,CU_CONTACT,CU_REMARKS};

@@ -97,6 +97,14 @@ SOURCE=.\ACCODE.CPP
 # End Source File
 # Begin Source File
 
+SOURCE=.\AllcosmosTicketMapping.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\AllcosmosWbApi.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\ADAM.CPP
 # End Source File
 # Begin Source File

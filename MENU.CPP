@@ -13,6 +13,7 @@
 #include "start.h"
 #include <locale.h>
 #include "initial.h"
+#include "AllcosmosTicketMapping.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -69,9 +70,44 @@ void CMenuApp::Profile()
 	LoadStdProfileSettings();  // Load standard INI file options (including MRU)
 }
 
+// "menu.exe /testallcosmosapi K000000001 D000000001": sends each completed ticket's AllcosmosSystem
+// calls (K = receiving, D = despatch) without the login, writes apitest.log and exits.
+static void RunAllcosmosApiTest(CString args)
+{
+    FILE *log = fopen("apitest.log", "a");
+    if(!log) return;
+    args.TrimLeft();
+    while(!args.IsEmpty()) {
+        CString ticket = args.SpanExcluding(" ");
+        args = args.Mid(ticket.GetLength());
+        args.TrimLeft();
+        const char *table = ticket[0] == 'D' ? "DESPATCH" : "WB";
+        CString sql;
+        sql.Format("select * from [%s] where [TICKET] = '%s'", table, ticket);
+        DB t;
+        ado(&t, table, NULL, sql);
+        if(read_sumindex(0, &t) > 0) {
+            readrec(1, &t);
+            SAllcosmosApiResult r = AllcosmosWeighOut(&t);
+            fprintf(log, "%s %s status=%d %s\n", (LPCTSTR)ticket, r.bSuccess ? "OK" : "FAILED", r.nStatusCode, (LPCTSTR)r.sMessage);
+        }
+        else {
+            fprintf(log, "%s not found\n", (LPCTSTR)ticket);
+        }
+        dclose(&t);
+    }
+    fclose(log);
+}
+
 BOOL CMenuApp::Domain()
 {
     program4 = Atoi(strVersionInfo);
+    int test = CString(m_lpCmdLine).Find("/testallcosmosapi");
+    if(test >= 0) {
+        Open();
+        RunAllcosmosApiTest(CString(m_lpCmdLine).Mid(test + 17));
+        return FALSE;
+    }
     CStart p1;
     p1.InitialFlag = 0x0002 | INIT_ADO_USER | INIT_ADO_PROGRAM_PASSWORD |
                      INIT_DISABLE_AUTO_SPACE_LPNO;
@@ -174,6 +210,8 @@ void CMenuApp::OpenAllDataFile()
     ado(&packing,"packing",init_packing);
     ado(&warehouse,"warehouse");
     ado(&transp,"transp");
+    ado(&AllcosmosApiRequestLog,"AllcosmosApiRequestLog");
+    ado(&AllcosmosApiResponseLog,"AllcosmosApiResponseLog");
 
     wb.e->chain = &wbdata;
     despatch.e->chain = &dbdata;

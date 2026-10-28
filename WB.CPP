@@ -9,6 +9,7 @@
 #include "FastSearch.h"
 #include "Export4ASCII.h"
 #include "resource.h"
+#include "AllcosmosTicketMapping.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -92,6 +93,7 @@ void CWb::ShowInformation()
 
     SetDlgItemText( IDC_GROSS_CHANGE, (df->val(FIRST) == df->val(Z1))  ? "" : "*");
     SetDlgItemText( IDC_TARE_CHANGE, (df->val(SECOND) == df->val(Z2))  ? "" : "*");
+    ShowAllcosmosStatus();
 
     int fld = GetDbFieldNo(df ,"Print Counter");
     if(!fld) return;
@@ -147,29 +149,13 @@ void CWb::ShowInformation()
 void CWb::ShowInitFrame(CMSFlexGrid *grid,DB *sub)
 {
     fg.Initial(grid,sub,2, 0.8F);
-    fg.SetTitle("No",400);
-    fg.SetTitle("D/N No",1000);
-    fg.SetTitle("P/O No 1",1000);
-    fg.SetTitle("P/O No 2",1000);
-    fg.SetTitle("P/O Qty",1000, 7);
-    fg.SetTitle("Item Code",2100);
-    fg.SetTitle("Item Description",4800);
-    fg.SetTitle("Qty",600,7);
-    fg.SetTitle("Unit",600);
-    fg.SetTitle("Packing",1300);
-    fg.SetTitle("Unit Wt.",1100,7);
-    fg.SetTitle("No pallets.",1050,7);
-    fg.SetTitle("Pallet Wt",1050,7);
-    fg.SetTitle("Theoretical Wt.",1750,7);
+    SetDetailGridTitles(fg);
 }
 
 void CWb::ReplaceSubGrid(long rec,long irec,CMSFlexGrid *m_grid,DB *sub,int IdxItem)
 {
     fg.show(rec);
-    fg.SetText(sub,NULL,Wd_DO,Wd_PO1,Wd_PO2,Wd_PQTY,Wd_PT,Wd_PT | 0x100,
-          Wd_QTY,Wd_UNIT,Wd_PACKING,Wd_UW,
-          Wd_NoPallet,Wd_PalletWt,Wd_TW,
-		  -1);
+    SetDetailGridRow(fg, sub);
 }
 
 BEGIN_MESSAGE_MAP(CWb, CParent)
@@ -183,6 +169,7 @@ BEGIN_MESSAGE_MAP(CWb, CParent)
 	ON_BN_CLICKED(IDC_BUTTON5, OnPM1WT)
 	ON_BN_CLICKED(IDC_BUTTON6, OnPM2WT)
 	ON_BN_CLICKED(IDC_BUTTON7, OnSetCompleteTicket)
+	ON_BN_CLICKED(IDC_ACS_RESEND, OnResendAllcosmos)
 	
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -665,6 +652,28 @@ void CWb::OnNew()
 	
 }
 
+// Status of the last AllcosmosSystem call; Resend only for completed (receiving / despatch) tickets.
+void CWb::ShowAllcosmosStatus()
+{
+	if(GetDlgItem(IDC_ACS_STATUS) == NULL) return;
+	BOOL configured = IsAllcosmosApiConfigured();
+	GetDlgItem(IDC_ACS_STATUS)->ShowWindow(configured ? SW_SHOW : SW_HIDE);
+	GetDlgItem(IDC_ACS_RESEND)->ShowWindow(configured ? SW_SHOW : SW_HIDE);
+	if(!configured) return;
 
+	CString ticket = df->dat[TICKET];
+	ticket.TrimRight();
+	SetDlgItemText(IDC_ACS_STATUS, GetAllcosmosStatusText(ticket));
+	GetDlgItem(IDC_ACS_RESEND)->EnableWindow(stricmp(df->name, "FIRST") != 0 && !isblank(df->dat[TIMEOUT]));
+}
 
+void CWb::OnResendAllcosmos()
+{
+	CString msg;
+	msg.Format("Send ticket %s to AllcosmosSystem again ?", df->dat[TICKET]);
+	if(MessageBox(msg, "Confirm it", MB_ICONQUESTION | MB_YESNO) == IDNO) return;
 
+	SAllcosmosApiResult r = AllcosmosWeighOut(df);
+	MessageBox(r.sMessage, "AllcosmosSystem", r.bSuccess ? MB_ICONINFORMATION : MB_ICONSTOP);
+	ShowAllcosmosStatus();
+}

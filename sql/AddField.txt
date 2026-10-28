@@ -1,0 +1,24 @@
+Add field at All Cosmos weighbridge server (Keluli / Suasa)
+
+1. Add Field above PKKEY at FDATA, WBDATA and DBDATA (all three, same order)
+DO_QTY	decimal(10, 2)	Checked
+BIN_LOCATION	nvarchar(40)	Checked
+
+The new fields must sit directly above PKKEY (field 24 and 25, PKKEY becomes 26) in all three
+tables, because the program reads the fields by position and copies lines FDATA -> WBDATA /
+DBDATA at the second weight. A plain "add column" in an admin tool puts them after PKKEY,
+which is wrong. Use 001_detail_add_do_qty_bin.sql in this folder instead of adding them by
+hand. DO Qty (Kg) is the weight on the supplier's delivery order; Bin Location is where the
+goods were put. Both are typed on the detail line (office ticket screen, or a double-click on
+a line at the lane second-weight screen) and shown in the detail grid.
+
+2. Add Field at the end of PROFILE (after "Print Counter")
+API_URL	nvarchar(500)	Checked
+API_USERNAME	nvarchar(50)	Checked
+API_PASSWORD	nvarchar(50)	Checked
+SITE_CODE	nvarchar(20)	Checked
+
+Same as 002_profile_add_allcosmos_api.sql. Filled in on Company Profile, group AllcosmosSystem.
+
+3. New tables AllcosmosApiRequestLog and AllcosmosApiResponseLog: run
+003_allcosmos_api_logs.sql (there is nothing to add by hand).

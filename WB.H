@@ -29,6 +29,7 @@ public:
     void OnSearch();
     void OnAfterPrint();
 	virtual void OnNew();
+    void ShowAllcosmosStatus();
     CString strWM,strWM2,errmsg;
     CString WeightServer;
     char cmd1[10],cmd2[10];
@@ -64,6 +65,7 @@ protected:
 	afx_msg void OnPM1WT();
 	afx_msg void OnPM2WT();
 	afx_msg void OnSetCompleteTicket();
+	afx_msg void OnResendAllcosmos();
 ;	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

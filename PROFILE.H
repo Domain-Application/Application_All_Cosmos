@@ -17,6 +17,8 @@ class CProfile : public CStaff
 public:
     CProfile(UINT IDD,DB *pdf,int Idx,CWnd* pParent = NULL);   // standard constructor
     virtual void ShowInformation();
+    void ShowSite();
+    void SetSite(const char *site);
 
 // Dialog Data
     //{{AFX_DATA(CProfile)
@@ -42,6 +44,8 @@ protected:
     afx_msg void OnTimer(UINT nIDEvent);
 	afx_msg void OnButton1();
 	afx_msg void OnGWST();
+	afx_msg void OnSiteKeluli();
+	afx_msg void OnSiteSuasa();
 	//}}AFX_MSG
     DECLARE_MESSAGE_MAP()
 };

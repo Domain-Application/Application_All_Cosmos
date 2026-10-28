@@ -343,6 +343,12 @@
 #define ID02461                         36925
 #define ID02462                         36926
 
+#define IDC_ACS_STATUS                  1294
+#define IDC_ACS_RESEND                  1295
+#define IDC_ACS_PONO                    1296
+#define IDC_ACS_PONO_LABEL              1297
+#define IDC_ACS_KELULI                  1298
+#define IDC_ACS_SUASA                   1299
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
@@ -350,7 +356,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        551
 #define _APS_NEXT_COMMAND_VALUE         32910
-#define _APS_NEXT_CONTROL_VALUE         1274
+#define _APS_NEXT_CONTROL_VALUE         1300
 #define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

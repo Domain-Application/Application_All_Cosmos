@@ -19,6 +19,7 @@ public:
 	 virtual void LoadImages();     
 	 int iType;
      CString m_contno,m_vehicle,m_tt;
+     CString m_poDo;     // PO No (receiving) or DO No (despatch) for detail line 1
 
 // Dialog Data
      //{{AFX_DATA(CIt1)
