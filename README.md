@@ -1,4 +1,4 @@
-📘 [Module reference / 模块参考](docs/MODULE_REFERENCE.md)
+📘 [Module reference / 模块参考](docs/MODULE_REFERENCE.md) · [中文](docs/MODULE_REFERENCE.zh-CN.md)
 
 # Application_All_Cosmos
 

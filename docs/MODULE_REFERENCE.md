@@ -1,7 +1,7 @@
 # Application_All_Cosmos - Module Reference
 
 > English edition (authoritative). Last verified against commit `15df32c` ("Rectified some bugs again", 2026-07-20).
-> Translation status: zh-CN copy not started.
+> Translation status: zh-CN copy in [MODULE_REFERENCE.zh-CN.md](MODULE_REFERENCE.zh-CN.md), synced 2026-10-28 (commit 8a4cce1).
 > Rule: any change to behaviour, tables, fields, screens, reports or calculations must update this reference in the same commit.
 > This repository is the **second member of a pair**: `Application_Vance_Bioenergy` is the related program whose reference was used as the structure and style template. The two code lines have **diverged**, so this file is a full rewrite and not a copy (see [Differences from Application_Vance_Bioenergy](#differences-from-application_vance_bioenergy)).
 
@@ -1054,7 +1054,7 @@ flowchart TD
 5. `CIt1` runs; its 250 ms timer rewrites `PGROSS` = `adjust_wt(cweight)`, `W1` = raw, `Z1` = adjusted (`:105-124`). Its `OnOK` (`:53-66`) runs `ReplaceRecord`, `IsSaveConditionOk` (which calls the table's save rule `receive_save`, [2.5.7](#257-ticket-screens-menus-11-12-and-16)), clears the pushed container number and ends the dialog (`IDOK` on lane B, `IDC_BUTTON1` on lane A; both mean "accepted"). **There is no blacklist check and no bin step.**
 6. On accept: `SaveImages(df,"JPGKEY1")`, the two `IN_*_SUCCESS` flags (the values of `isLPR_OK` / `isCNR_OK`), `TIMEIN` and `Date` set to now, `df->AddNew()` (insert into `FIRST`) (`:190-196`). `OnRadio1` / `OnRadio2` then reset both flags to TRUE and close Weighing Control (`:201-221`). The barrier is **not** opened (finding 9).
 
-**Second weight** (`CSecurity::OnSecond`, `IT2.CPP:278-371`):
+**Second weight** (`CSecurity::OnSecond`, `IT2.CPP:263-358`):
 1. For a container, `Container` is set, the vehicle is looked up in the vehicle master and `PM2WT` = its `TARE`, `PM2NO` = the vehicle, `PM2TIME` = `Lo_TIME`, `USER4` = `LAST_WEIGHT_BY`; the lane letter is written to a field named `IT4`, which does not exist (finding 7). Otherwise `LORRY` = vehicle (`:281-299`).
 2. The type is read from `Print Counter`; `PTARE`, `W2`, `Z2` = `cweight`, `I2`, `USER2`, `TIMEOUT` = now, and `df->SqlUpdate()` writes the open row **before** the screen opens (`:300-308`; finding 12).
 3. `CIt2` opens. `OnInitDialog` compares `cweight` with `PGROSS` and asks "Should be Receiving/Despatch weighing type" if it disagrees with the stored type (`:126-141`); it shows the detail grid (`:163`, `:188-214`); the timer rewrites `PTARE`, `W2`, `Z2` and refreshes net and variance through `compute_weight` (`:254-276`). `OnOK` (`:86-120`): the "supplier weight is required for tanker" question for a receiving ticket without a container and without a supplier weight (`:88-94`), `compute_weight`, `ReplaceRecord`, `IsSaveConditionOk` (which runs the supplier variance check) and ends the dialog.
@@ -1293,7 +1293,7 @@ A ticket without a PO No / DO No on its first detail line is not sent, and nothi
 ## 2.10 Maintenance
 
 - **How to update this document.** Change it in the same commit as the code. Re-run `check_doc.py` and `check_mermaid.mjs` (see the skill `domain-module-reference`). Keep the schema notes in sync with `SQL_All_Cosmos` when that repository is updated. Re-run the comparison in [Differences](#differences-from-application_vance_bioenergy) when either repository moves.
-- **Last verified against commit `15df32c`.** Translation status: zh-CN not started.
+- **Last verified against commit `15df32c`.** Translation status: zh-CN written, synced 2026-10-28.
 
 | Date | Commit | Who | What changed |
 |---|---|---|---|
@@ -1349,7 +1349,7 @@ A ticket without a PO No / DO No on its first detail line is not sent, and nothi
 | `win.ini [Indicator]` mask values, PLC wiring, camera IPs | Not in the repository |
 | `MYCCTV.CPP` (the local copy of the library camera class, about 1,750 lines) | Vendor SDK code; only the call sites and the login query were read |
 | Screenshots | None in the repository; the program was not run |
-| zh-CN translation | Not yet written |
+| zh-CN translation | Done, synced 2026-10-28 |
 
 ## Code findings
 
