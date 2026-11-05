@@ -492,7 +492,7 @@ The text is taken from the program. `%s` stands for a value filled in at run tim
 | Barrier | Gate arm at the platform | Palang | 栏杆 |
 | PLC | Controller that reads the sensors and switches the barriers | PLC | 可编程控制器 |
 | Dual mode | Lane mode where the barrier at the other end opens by itself | Mod dual | 双向模式 |
-| Ticket | Weighing document | Tiket | 磅单 |
+| Ticket | Weighing document | Tiket | 过磅单 |
 | Delivery order (D/O) | Form handed to the driver | Pesanan penghantaran | 送货单 |
 | Yard list | Vehicles with a first weight and no second weight | Senarai dalam kawasan | 场内车辆清单 |
 
