@@ -161,6 +161,7 @@
 #define IDD_PMWeighing                  548
 #define IDD_IT1                         549
 #define IDD_IT2                         550
+#define IDD_ACS_PICK                    551
 #define IDC_GLNAME                      1053
 #define IDC_GLCODE                      1056
 #define IDD_GLCODE                      1056
@@ -327,6 +328,10 @@
 #define IDC_ZERO_FLAG                   1280
 #define IDC_STABLE_FLAG                 1281
 #define ID_VEHICLEINYARD_VIEW           1282
+#define IDC_ACS_REFNO                   1283
+#define IDC_ACS_PICK                    1284
+#define IDC_ACS_REFNO_LABEL             1285
+#define IDC_ACS_LIST                    1286
 #define IDC_BAL                         2131
 #define ID_BACK                         32839
 #define ID_EXIT                         32840
@@ -348,7 +353,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        551
+#define _APS_NEXT_RESOURCE_VALUE        552
 #define _APS_NEXT_COMMAND_VALUE         32910
 #define _APS_NEXT_CONTROL_VALUE         1274
 #define _APS_NEXT_SYMED_VALUE           104

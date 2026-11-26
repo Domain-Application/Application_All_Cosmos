@@ -7,6 +7,7 @@
 #include "comm.h"
 #include "nview.h"
 #include "It1.h"
+#include "AcsTicketMapping.h"
  
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -43,6 +44,7 @@ BEGIN_MESSAGE_MAP(CIt1, CFEdit)
     ON_WM_DESTROY()
     ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_SNAPSHOTS, OnSnapshots)
+	ON_BN_CLICKED(IDC_ACS_PICK, OnAcsPick)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -54,6 +56,20 @@ void CIt1::OnOK()
 {
 	ReplaceRecord();
     if (IsSaveConditionOk(df)==0) return;
+
+    if(AcsIsActive(df)) {
+        CString ref;
+        GetDlgItemText(IDC_ACS_REFNO, ref);
+        ref.TrimLeft();
+        ref.TrimRight();
+        if(ref.IsEmpty() && MessageBox("AllCosmos Ref No. / DO No. is blank.\n\nSave anyway? It can be added later with Utility > AllCosmos Resend Pending Tickets.",
+                                       "AllCosmos", MB_YESNO | MB_ICONQUESTION) != IDYES) {
+            GetDlgItem(IDC_ACS_REFNO)->SetFocus();
+            return;
+        }
+        lset(df, "API_REF_NO", ref);
+        lset(df, "API_UNIT", ref == m_acsRefNo ? m_acsUnit : CString(""));
+    }
 
     int key = GetCheckedRadioButton(IDC_RADIO1,IDC_RADIO2);
     ((CMenuApp*)AfxGetApp())->SetPushPlateno2("");
@@ -76,6 +92,15 @@ BOOL CIt1::OnInitDialog()
 		SetDlgItemText( StaticId(SWT), "Buyer Weight");
     }
 	SetDlgItemText( IDC_TITLE, t);
+
+    if(!AcsIsActive(df)) {
+        GetDlgItem(IDC_ACS_REFNO_LABEL)->ShowWindow(SW_HIDE);
+        GetDlgItem(IDC_ACS_REFNO)->ShowWindow(SW_HIDE);
+        GetDlgItem(IDC_ACS_PICK)->ShowWindow(SW_HIDE);
+    }
+    else if(iType==2) {
+        SetDlgItemText(IDC_ACS_REFNO_LABEL, "AllCosmos DO No.");
+    }
 
     CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO1);
     m_tt = df->dat[TT];
@@ -194,6 +219,7 @@ BOOL CSecurity::OnFirstWt(int type, BOOL LPR_Status, BOOL CNR_Status)
 	df->SetCurrentTime(Date);
     df->AddNew();
 	IsZeroWt = FALSE;
+    if(df->m_SaveFlag) AcsSendIn(df);
 	return TRUE;
 }
 
@@ -218,6 +244,13 @@ void CSecurity::OnRadio2(BOOL LPR_Status, BOOL CNR_Status)
 	{
 		CFM20Dlg::OnOK();
 	}
+}
+
+void CIt1::OnAcsPick()
+{
+    if(AcsPickRefNo(iType==2, m_acsRefNo, m_acsUnit)) {
+        SetDlgItemText(IDC_ACS_REFNO, m_acsRefNo);
+    }
 }
 
 void CIt1::LoadImages()

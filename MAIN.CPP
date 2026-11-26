@@ -5,6 +5,7 @@
 #include "admindb.h"
 #include "Profile.h"
 #include "Wb.h"
+#include "AcsTicketMapping.h"
 
 enum menu {M_NORMAL=1,M_CTRL,M_OTHER};
 enum kkk1 {M_REPORT = M_NORMAL * 10 +4 };
@@ -147,6 +148,9 @@ int CMenuApp::SubProgram(int key)
         break;
     case M_OTHER*10+8:
        camera.Run();
+        break;
+    case M_OTHER*10+9:
+        AcsResendPending();
         break;
     default:
          return 0;

@@ -19,6 +19,7 @@ public:
 	 virtual void LoadImages();     
 	 int iType;
      CString m_contno,m_vehicle,m_tt;
+     CString m_acsRefNo, m_acsUnit;     // AllCosmos Ref No / DO No and PO unit from the pick list
 
 // Dialog Data
      //{{AFX_DATA(CIt1)
@@ -45,6 +46,7 @@ protected:
     afx_msg void OnTimer(UINT nIDEvent);
     virtual void OnCancel();
 	afx_msg void OnSnapshots();
+	afx_msg void OnAcsPick();
 	//}}AFX_MSG
     DECLARE_MESSAGE_MAP()
 };

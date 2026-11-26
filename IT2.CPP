@@ -9,6 +9,7 @@
 #include "comm.h"
 #include "nview.h"
 #include "Reqitem.h"
+#include "AcsTicketMapping.h"
  
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -325,6 +326,7 @@ BOOL CSecurity::OnSecond(BOOL LPR_Status, BOOL CNR_Status)
     ltodb(LPR_Status, pf,  GetDbFieldNo(pf, "OUT_LPR_SUCCESS"));
     ltodb(CNR_Status, pf,  GetDbFieldNo(pf, "OUT_CNR_SUCCESS"));
     pf->AddNew();
+    BOOL bSaved = pf->m_SaveFlag;
     IsZeroWt = FALSE;
     CString msg, normal_report_name, do_report_name;
     normal_report_name.Format("%s.rpt", pf->name);
@@ -360,6 +362,7 @@ BOOL CSecurity::OnSecond(BOOL LPR_Status, BOOL CNR_Status)
     }
     dclose(&adoTmp);
     dclose(&sub_table); //TODO: investigate why require instantiate another DB pointer or else once Added New, The weighing entry facing system crash
+    if(bSaved) AcsSendOut(pf);
 	if(!strcmp(pf->name, "WB")) {
 		pf->PrintOneFormOnly("wbdo.rpt");
 	}
