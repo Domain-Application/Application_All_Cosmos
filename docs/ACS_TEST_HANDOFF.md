@@ -1,7 +1,7 @@
 # AllCosmos weighbridge API - handoff (paused 2026-11-26 22:45 on KELVIN)
 
 Code: GitHub `Domain-Application/Application_All_Cosmos`, branch `feature/allcosmos-weighbridge-api`.
-Test scripts: `tools/acs-test-kit/` (paths inside point at KELVIN's scratchpad - adjust). Videos and website
+Spec (James's guide, Postman collection, email details incl. the UAT login): `docs/allcosmos-spec/`. Test scripts: `tools/acs-test-kit/` (paths inside point at KELVIN's scratchpad - adjust). Videos and website
 screenshots are not in git: `\\kelvin\Dev Container\AllCosmos-API-handoff\`.
 
 ## Prompt to paste into Claude Code on the other PC
@@ -16,8 +16,7 @@ screenshots are not in git: `\\kelvin\Dev Container\AllCosmos-API-handoff\`.
 
 ## What is done
 
-- Website test data made on UAT (https://allcosmos.domainsb.com.my/, login DOMAIN - password in James's
-  email / `profile.API_PASSWORD`, never write it into a file) through API Demo + the normal pages:
+- Website test data made on UAT (https://allcosmos.domainsb.com.my/, login DOMAIN, password in `docs/allcosmos-spec/README.md`) through API Demo + the normal pages:
   - PO `WB-PO-0001` (RM-MOP60E, MT) -> Raw Material Planning key 2: Ref `WB-PO-0001-RM-MOP60E-1` (done:
     in+out, ticket S000164714) and `-2` (Ticket In only: lorry ACST202, ticket S000164715, still in the yard).
   - PO `WB-PO-0002` (RM-RPH26, MT) -> planning key 3: `WB-PO-0002-RM-RPH26-1` (done: in+out, ticket
