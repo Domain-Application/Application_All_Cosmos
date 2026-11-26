@@ -108,7 +108,7 @@ UINT PhotoThreadProc(LPVOID pParam)
         CString* pResultStr = new CString();
         
         bool doSnapshot = false;
-        if( (i == 1 && !app->GetPushPlateno1().IsEmpty()) || (i == 2 && !app->GetPushPlateno2().IsEmpty()) || i == 3 )
+        if( (i == 1 && !app->GetPushPlateno1().IsEmpty()) || (i == 2 && !app->GetPushPlateno2().IsEmpty()) || i == 3 || i == 4 || i == 9 || i == 10 )   // configured cameras 01-04, 09, 10 (camera 4 was missing)
         {
              app->OnSnapshot(i, file);
              
@@ -123,11 +123,6 @@ UINT PhotoThreadProc(LPVOID pParam)
         {
             *pResultStr = plateno1;
         }
-        if(i==9 || i==10)
-		{
-			app->OnSnapshot(i, file);
-			*pResultStr = "";
-		}
         // Post message to UI thread
         // We pass the string pointer in LPARAM. Receiver must delete it.
         ::PostMessage(p->hWnd, WM_PHOTO_PROCESSED, (WPARAM)i, (LPARAM)pResultStr);

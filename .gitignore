@@ -51,3 +51,7 @@
 /*backup*/
 /SampleLabel/
 Menu.ncb
+
+# Ignore replication scripts (contain real DB credentials)
+/replication/*.ps1
+/replication/*.md

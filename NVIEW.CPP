@@ -560,6 +560,7 @@ BOOL CNView::CopyPhotoToServer(int jpgkey)
     for(int i=1; i<=TotalCameras; i++) {
 
         CString p = strPhoto[i];
+        if(IsFileExisted(p)==0) continue;   // unused camera slot, keep copying the rest
 
 		CString file = FileOnly(strPhoto[i]);
 		k.Format("%s\\%s",s,file);
