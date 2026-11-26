@@ -28,8 +28,8 @@ The weighing is always saved first. The call comes after it and never stops the 
 | `weighbridge_qty` | \|2nd weight − 1st weight\|, `m[5]` − `m[2]` (prime-mover adjusted, before wastage) |
 | `supplier_delivery_qty` | Supplier Wt `SWT` (`m[0]`) |
 | (all three receiving quantities) | kg divided by the PO unit: KG ÷ 1, MT ÷ 1000. Any other unit: not sent, ticket flagged N |
-| `actual_weight` / `actual_unit` | Nett kg `m[11]` / `"KG"` |
-| `bin_location`, `lot_no` | Not sent (optional). `BIN` is used by prime-mover weighing and `LOTNO` holds the supplier D/O No., so neither means what the API means. Without `lot_no` the website uses the weigh-out date for the GRN. |
+| `actual_weight` / `actual_unit` | Nett kg `m[11]` ÷ 1000 / `"MT"`. The website's Unit master has no KG (UAT: BTL, EA, LITRE, MT, PACK, PC), so a `"KG"` line is refused. |
+| `bin_location`, `lot_no` | Not sent (the guide calls them optional). `BIN` is used by prime-mover weighing and `LOTNO` holds the supplier D/O No., so neither means what the API means. Without `lot_no` the website uses the weigh-out date for the GRN. **Open point:** CSL rejects every GRN without a bin ("Bin Location can't be blank", see Test results). |
 
 The PO unit (`API_UNIT`) comes with the Ref No from the pick list. If the Ref No was typed, the
 unit is looked up in `V_ACS_RECEIVING_REF` at Ticket Out.
@@ -49,10 +49,18 @@ itself.
 
 ### Resend
 
-**Utility > 39 AllCosmos Resend Pending Tickets** goes through every ticket flagged `N` (yard and
-completed). While a ticket's 1st weigh is not yet accepted it first shows its Ref No / DO No in a
-box so the operator can correct it (Cancel stops). It then resends and ends with "n accepted,
-m still pending". The website accepts a resend until the GRN / Confirm DO is Posted (guide 4.1).
+**Utility > 39 AllCosmos Resend Pending Tickets** resends one ticket at a time:
+
+1. A list shows every ticket flagged `N` (FIRST = still in the yard, WB / DESPATCH = completed),
+   newest first, with its Ref No / DO No and both flags. The operator picks one.
+2. While that ticket's 1st weigh is not accepted, the app shows the Ref No / DO No it holds and
+   asks "Pick a different one from the AllCosmos list?". Yes opens the same pick list as the "..."
+   button; the chosen number replaces the old one on the ticket. No keeps it.
+3. The ticket is sent again: Ticket In / DO Time In for a ticket still in the yard, otherwise Ticket
+   Out / DO Time Out (which first re-sends the 1st weigh if needed). "Ticket … accepted by
+   AllCosmos." on success; otherwise the website's message, and the ticket stays in the list.
+
+The website accepts a resend until the GRN / Confirm DO is Posted (guide 4.1).
 
 ## Set-up
 
@@ -62,6 +70,12 @@ m still pending". The website accepts a resend until the GRN / Confirm DO is Pos
    integration off. UAT: `https://allcosmos.domainsb.com.my/`. Production: to be given.
 3. Until `sql/004` exists, the "…" button says the list is not available; the operator types the
    Ref No / DO No.
+4. The pick lists leave out numbers already on a lorry in the yard (`FIRST.API_REF_NO`). The DO
+   list shows only DOs whose Delivery Date is today (James's query).
+
+`sql/900_TEST_ONLY_load_website_test_data.sql` creates the 11 website tables with test rows so that
+`sql/004` and the pick lists can be tried before the real sync exists. **Test databases only.**
+Drop those tables (block at the end of the script) before the real sync is installed.
 
 ## Audit trail
 
@@ -84,9 +98,45 @@ order by q.PKKEY desc
   weighing screens. Check the website pages in guide 5.4 and the two log tables.
 - GRN / Confirm DO failures in UAT are normal (the test data does not exist in CSL).
 
+## Test results (UAT, 2026-11-26)
+
+Run against UAT from the Debug build on test database `allcosmos suasa` (torry), with the
+`sql/900` test tables. Every call was accepted by the website (`isSuccess: true`); screen
+recordings with the website pages after each call are in the handoff folder (`video\`).
+
+| # | Case | Ticket | Result |
+|---|---|---|---|
+| 1 | Ticket In, Ref No picked with "..." | S000164716 (ACST301) | Accepted; Raw Material Planning WB-PO-0002 line 1 got ticket, lorry, Time In |
+| 2 | Ticket Out | S000164716 | Accepted; 30 / 30.04 / 29.98 MT and Time Out on the line |
+| 3 | DO Time In, DO picked with "..." | C000002406 (CCH4092), DO 900260001 | Accepted; lorry in the Lorry Que (Filling) |
+| 4 | DO Time Out | C000002406 | Accepted; Actual Quantity 20.020 MT, Lorry Que Completed |
+| 5 | Ticket In with a typed, wrong Ref No, then Resend with the right one, then Ticket Out | S000164717 (ACST302) | 1st call refused ("Ref No … is not in Raw Material Planning or Import Schedule & Costing"), ticket saved with `API_IN_OK = N`; resend with WB-PO-0002-RM-RPH26-2 accepted; Ticket Out accepted (28.12 / 28.12 / 28 MT) |
+
+Findings:
+
+- **CSL GRN needs `bin_location`.** Every Ticket Out reply ends with "Posting the GRN to CSL failed:
+  CSL answered HTTP 400. Bin Location can't be blank". The guide calls the field optional;
+  production GRNs will fail the same way. Decision needed (Kelvin / James): one fixed bin per site
+  in `profile`, or a field on the 2nd-weigh screen.
+- **CSL Confirm DO** needs a numeric DO No (max 9 digits). With numeric DO 900260001 it still
+  failed in UAT: "CSL answered HTTP 503. Service unavailable - failed to process the request Invalid
+  division" (shown on the Daily Delivery Planning page). Test-data issue on CSL's side; the
+  weighbridge call itself was accepted.
+- Lorry plates are stored without spaces (CCH 4092 → CCH4092), but the 2nd-weigh search uses the
+  typed text: typing "CCH 4092" opens a new 1st weigh. Existing behaviour, not from this change.
+- Supervisor approval (`CLogerr`, LOGERR.CPP) compares the typed password with `user.ACCESS` as
+  plain text, so a normal login password is refused there. Existing behaviour.
+- Ticket Out / DO Time Out is sent after the ticket print returns (IT2.CPP). If the Crystal job
+  cannot open (missing `.rpt`, no Crystal runtime), wlib32's hidden print dialog never closes, the
+  screen stays on "Proceeding..." and the call is not sent (seen on a test PC without Crystal).
+  Normal sites with Crystal are not affected; Resend covers a ticket left unsent.
+- The website's API Demo page has an API login written in its page source - reported to James.
+
 ## Not done yet
 
 - **Profile screen fields** for API URL / user / password: `CProfile` binds controls by column
   position, so they wait for the live column check on the site database. Until then, set the
   three values with SQL (`sql/README.md`).
-- **Pick list** (`DB::browse` over the view) is untested until the synced tables exist.
+- **`bin_location`** - see Findings.
+- **The website sync** (the 11 tables `sql/004` reads) is not this app's job and does not exist
+  yet; `sql/900` stands in for it on test databases only.

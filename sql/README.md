@@ -9,6 +9,7 @@ Run on the app database (PROVIDER.SYS line 1). Every script is idempotent and st
 | `002_alter_ticket_tables_add_allcosmos_fields.sql` | `API_REF_NO`, `API_UNIT`, `API_IN_OK`, `API_OUT_OK` on FIRST, WB, DESPATCH | Now |
 | `003_create_allcosmos_api_log_tables.sql` | `AcsApiRequestLog`, `AcsApiResponseLog` | Now |
 | `004_create_allcosmos_pick_views.sql` | `V_ACS_RECEIVING_REF`, `V_ACS_DESPATCH_DO` (James's queries) | After the website tables are synced in. Stops with an error if they are missing. |
+| `900_TEST_ONLY_load_website_test_data.sql` | Creates the 11 website tables with the UAT test rows (stand-in for the sync) | **Test databases only**, before `004`. Drop the tables (block at its end) before the real sync arrives. |
 
 Before 002, check the three tables are real tables, not views (the script prints `type_desc` and
 skips a view).

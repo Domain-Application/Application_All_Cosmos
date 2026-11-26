@@ -41,7 +41,16 @@ screenshots are not in git: `\\kelvin\Dev Container\AllCosmos-API-handoff\`.
   accepted by UAT. Right panel = request JSON + website reply + ticket flags, read live from the log tables.
   `website-proof\` = UAT page screenshots (planning line after in/out, Lorry Que after DO Time In).
 
-## Still to do
+## Status 2026-11-27 (AI-PC): the list below is DONE
+
+- Clip 5 recorded (S000164717, ACST302: rejected -> Resend with WB-PO-0002-RM-RPH26-2 accepted -> Ticket Out accepted).
+- Website screenshots for clips 3-5 taken; final videos joined (title card + clip + website still, one per
+  requirement + `AllCosmos-API-ALL.mp4`): AI-PC `C:\Domain\_work\AllCosmos_API_handoff\video\`.
+- `ALLCOSMOS_API_INTEGRATION.md` (test results + findings), `CPP_PROGRAMMING_NOTES.md` and `sql/README.md` updated;
+  Debug + Release rebuilt on AI-PC (0 errors). New end-user guide: `User_Guide\AllCosmos Link\` (kit in `User_Guide\_kit`).
+- Still open: `bin_location` decision; set 2/3 sync-back and test-data cleanup scripts (in the final report, not run).
+
+## Still to do (as left on KELVIN)
 
 1. **Clip 5 - failure + resend** (Kelvin asked for "all the api changes"): lorry e.g. ACST302, receiving
    1st weigh, TYPE a wrong Ref No (e.g. `WB-PO-0002-RPH26-2`) -> website rejects, ticket saved with
