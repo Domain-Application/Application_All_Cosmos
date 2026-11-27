@@ -19,7 +19,7 @@ Lives in the repo at `User_Guide\_kit\`. Built with the `cpp-user-guide-builder`
 |---|---|
 | receiving_1st_weigh.png | live, hidden desktop, lorry GUIDE01, closed without saving (Exit > Yes) |
 | receiving_2nd_weigh.png | live 2026-11-27, ACST202 2nd weigh (S000164715), cropped 809x555 to fit a landscape page |
-| ticket_status.png | live 2026-11-27, menu 11 with S000164717 loaded, crop of the status line + Resend button |
+| ticket_status.png | live 2026-11-27 (after the status-line fix), menu 11 with S000164719 loaded, crop 686x138 of the status line + Resend button: wider than 649, so it sits on a landscape page |
 | resend_again_ok.png | live 2026-11-27, Resend to AllCosmos on S000164717 (already accepted) |
 | bin_master.png | live 2026-11-27, menu 294 while adding BIN-TEST2 |
 | ref_pick_list.png, resend_list.png, resend_ask.png, resend_ok.png | live, clip-5 run |

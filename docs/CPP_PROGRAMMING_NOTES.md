@@ -106,6 +106,10 @@ and dates in the SQL). Proven 2026-11-26 for the Ref No, DO No and resend lists.
 `IDC_ACS_STATUS` (1290) and `IDC_ACS_RESEND` (1291) right of Container/Trailer.
 `ShowAcsStatus()` runs at the end of `ShowInformation()` (every record shown) and after a resend;
 the button is disabled while no ticket is loaded.
+`IDC_ACS_STATUS` holds exactly two lines (17 DLU) and has no room to grow (Container/Trailer on the
+left, the weight group box on the right). So `AcsStatusText()` keeps both lines short ("Ref No: … Bin: …"
+/ "1st: … 2nd: …", at most 37 characters on line 2) and the control is `SS_LEFTNOWORDWRAP`: a long
+Ref No / bin is clipped at the right instead of wrapping and pushing the flags line out of the box.
 
 ## Testing on a PC without the COM loop cable
 

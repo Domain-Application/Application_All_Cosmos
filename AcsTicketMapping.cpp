@@ -274,10 +274,10 @@ CString AcsStatusText(DB* df)
     if (Ticket(df).IsEmpty()) return "";
     BOOL bDespatch = AcsIsDespatch(df);
     CString s, sRef = TicketText(df, "API_REF_NO");
-    s.Format("AllCosmos %s: %s", bDespatch ? "DO No" : "Ref No", sRef.IsEmpty() ? "(blank)" : (LPCTSTR)sRef);
+    s.Format("%s: %s", bDespatch ? "DO No" : "Ref No", sRef.IsEmpty() ? "(blank)" : (LPCTSTR)sRef);
     if (!bDespatch && AcsHasBin(df)) s += "   Bin: " + TicketText(df, "API_BIN");
-    s += "\n1st weigh: " + FlagText(df, "API_IN_OK");
-    if (!IsFirstTable(df)) s += "    2nd weigh: " + FlagText(df, "API_OUT_OK");
+    s += "\n1st: " + FlagText(df, "API_IN_OK");
+    if (!IsFirstTable(df)) s += "   2nd: " + FlagText(df, "API_OUT_OK");
     return s;
 }
 
