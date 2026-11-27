@@ -1,0 +1,100 @@
+diff --git a/COMM.CPP b/COMM.CPP
+index 0c7ce9f..618fb6e 100644
+--- a/COMM.CPP
++++ b/COMM.CPP
+@@ -1003,6 +1003,7 @@ BOOL SetCommThread(HWND hWnd,BOOL Check)
+ 
+     
+ 	long mode = GetProfileIndicatorThreadMode();
++    CommThreadProc = 1;         //claim before AfxBeginThread so a second call cannot start another reader
+     if(mode==0) {
+         pThread = AfxBeginThread(LoopReadCommThreadProc, hWnd, THREAD_PRIORITY_BELOW_NORMAL);
+     }
+@@ -1016,6 +1017,7 @@ BOOL SetCommThread(HWND hWnd,BOOL Check)
+     commMode = GetProfileIndicatorCommMode();
+     if(commMode<0) commMode = 0;
+     if(!pThread) {
++         CommThreadProc = 0;
+          bReading = FALSE;
+          return FALSE;
+     }
+@@ -1030,13 +1032,32 @@ void CloseCommThread()
+     bReading = FALSE;
+ }
+ 
++static void WaitCommThreadExit(int ms)
++{
++    for(int waited=0; CommThreadProc==1 && waited<ms; waited+=20) Sleep(20);
++}
++
++//CancelIoEx is Vista+ and not in the VC6 SDK, so it is looked up at run time
++static void CancelPendingCommIo(HANDLE h)
++{
++    typedef BOOL (WINAPI *PFN_CANCELIOEX)(HANDLE, LPOVERLAPPED);
++    PFN_CANCELIOEX pCancelIoEx = (PFN_CANCELIOEX) GetProcAddress(GetModuleHandle("kernel32.dll"), "CancelIoEx");
++    if(pCancelIoEx) pCancelIoEx(h, NULL);
++}
++
+ void CloseCommEvent()
+ {
+     if(hComm) {
+         bReading = FALSE;
+ 
+-        Sleep(100);
++        //port is non-overlapped: SetCommMask/CloseHandle would block behind the reader's pending WaitCommEvent
++        WaitCommThreadExit(1000);
++        if( CommThreadProc == 1) {
++            CancelPendingCommIo(hComm);
++            WaitCommThreadExit(1000);
++        }
+         if( CommThreadProc == 1) {
++            app->Footmark("Com port not closed: reader thread still active");
+             if(commMode==3) {
+                 TRACE("\nCom port no close.");
+             }
+@@ -1171,6 +1192,7 @@ UINT ReadTcpData(CString m_ipadd,int m_port)
+         m_msg.Format("Could not create socket. Error, IP %s \r\n",m_ipadd);
+         AddLog(m_msg);
+ 		cweight = -2;
++        WSACleanup();
+         return 1;
+     }
+ 	
+@@ -1185,10 +1207,12 @@ UINT ReadTcpData(CString m_ipadd,int m_port)
+         m_msg.Format("Connection failed. Error, IP %s \r\n", m_ipadd);
+         AddLog(m_msg);
+ 		cweight = -3;
++        closesocket(sock);
++        WSACleanup();
+         return 2;
+     }
+ 
+-    BYTE Buffer[800];
++    BYTE Buffer[200];       //locProcessBytes copies into a 200-byte wt[] and treats buf as a C string
+ 	memset(Buffer, 0, sizeof(Buffer));
+ 	
+     int fd = sock;
+@@ -1202,13 +1226,14 @@ UINT ReadTcpData(CString m_ipadd,int m_port)
+ 		FD_SET(fd, &readSet);
+ 		int nReturn = select(fd+1, &readSet, NULL, NULL, &timeout);
+ 		if (nReturn < 0){
++            Sleep(100);
+             continue;
+ 		}
+ 		if (!FD_ISSET(fd, &readSet)){
+             continue;
+ 		} 
+ 		
+-        int retval = recv(sock,(char *) Buffer , sizeof(Buffer),0 );
++        int retval = recv(sock,(char *) Buffer , sizeof(Buffer) - 1,0 );
+ 		if(retval == 0) {
+ 			offset++;
+ 			if(offset>10) break;
+@@ -1221,6 +1246,7 @@ UINT ReadTcpData(CString m_ipadd,int m_port)
+ 			break;
+ 		}
+ 		if(bReading==0) break;
++        Buffer[retval] = 0;
+         locProcessBytes((char *)Buffer, retval);
+ 
+     }

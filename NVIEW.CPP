@@ -288,6 +288,10 @@ void CNView::OnCreateTCPServer(const CString& portFieldName)
 
 void CNView::OnDestroy()
 {
+    KillTimer(timer_status);	//CCctvView kills these only in OnClose, which a view never gets
+    KillTimer(timer_adam);
+    KillTimer(timer_video);
+    KillTimer(timer_weight);
     StopPlcPolling();
 
     CSingleLock lock(&m_csServer, TRUE);

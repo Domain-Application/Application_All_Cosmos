@@ -245,3 +245,13 @@ Ref No / bin is clipped at the right instead of wrapping and pushing the flags l
   same user: back it up, change it only for the seconds the app needs to start, restore it.
 - MFC modal dialogs in this app sometimes stay invisible on a hidden desktop (shown only on the
   first idle). A picked list then has to be found with `EnumDesktopWindows`.
+
+## `wlib_local\`: library fixes for this program only
+
+`MODBUS.CPP`, `COMM.CPP` and `MYCCTV.CPP` are copied from wlib32 (`bedbdc4`) with fixes and compiled by
+`menu.dsp`, so the library's objects for those three files are not linked into this exe. The shared library
+stays unchanged. Details, and how to refresh the copies when wlib32 changes: `wlib_local\README.md`. Same
+change as Application_Vance_Bioenergy.
+
+`CCctvView` kills its timers only in `OnClose`, which a view never receives; `CNView::OnDestroy` kills them
+itself.

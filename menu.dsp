@@ -240,6 +240,18 @@ SOURCE=.\WBDATA.CPP
 
 SOURCE=.\weighbridge.CPP
 # End Source File
+# Begin Source File
+
+SOURCE=.\wlib_local\MODBUS.CPP
+# End Source File
+# Begin Source File
+
+SOURCE=.\wlib_local\COMM.CPP
+# End Source File
+# Begin Source File
+
+SOURCE=.\wlib_local\MYCCTV.CPP
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

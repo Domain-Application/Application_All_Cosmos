@@ -1,0 +1,91 @@
+diff --git a/MYCCTV.CPP b/MYCCTV.CPP
+index 354abb1..de3f371 100644
+--- a/MYCCTV.CPP
++++ b/MYCCTV.CPP
+@@ -847,7 +847,7 @@ BOOL CMyCctvApp::OnSnapshot(int i,const char *jpg_file,int quality,int PicSize,i
+ 				DWORD noerr = NET_DVR_GetLastError();
+ 				if(noerr==NET_DVR_NOSUPPORT) {
+ 					msg.Format("HIK LPR camera %i not support JPG direct output.\n\nPlease change camera setting.", i);
+-					ErrorBox(msg);
++					ErrorBox(msg, 0, GetCurrentThreadId() != AfxGetApp()->m_nThreadID);    //log only off the UI thread
+ 				}
+ 				else {
+ 					msg.Format("Snapshot %s fail error no : %i", photo, noerr);
+@@ -1080,11 +1080,6 @@ BOOL CMyCctvApp::OnGetPlateNo(int id,CString &plateno,int option,const char *pic
+ 
+ 	m_struManualSnap.byOSDEnable = TRUE;
+     m_struManualSnap.byChannel = 1;
+-	m_struResult.pBuffer1 = new BYTE[2 * 1024 * 1024];
+-    memset(m_struResult.pBuffer1, 0, 2 * 1024 * 1024);
+-	
+-	m_struResult.pBuffer2 = new BYTE[1024 * 1024];
+-    memset(m_struResult.pBuffer2, 0, 1024 * 1024);
+ 
+ 	app->m_lpr_camera_no = 0;
+     if(id>100) {
+@@ -1096,6 +1091,12 @@ BOOL CMyCctvApp::OnGetPlateNo(int id,CString &plateno,int option,const char *pic
+ 		return FALSE;
+ 	}
+ 
++	int exitCode = -1;      //set by an early exit; buffers are freed once at free_buffers
++	m_struResult.pBuffer1 = new BYTE[2 * 1024 * 1024];
++    memset(m_struResult.pBuffer1, 0, 2 * 1024 * 1024);
++	
++	m_struResult.pBuffer2 = new BYTE[1024 * 1024];
++    memset(m_struResult.pBuffer2, 0, 1024 * 1024);
+ 
+     int m_nLinkID = app->Jd[id].m_nLinkID;
+ 	if (!NET_DVR_ManualSnap(m_nLinkID, &m_struManualSnap, &m_struResult))
+@@ -1103,7 +1104,8 @@ BOOL CMyCctvApp::OnGetPlateNo(int id,CString &plateno,int option,const char *pic
+ 		long pErrorNo = NET_DVR_GetLastError();
+         CString msg = NET_DVR_GetErrorMsg(&pErrorNo);
+ //		g_pMainDlg->AddLog(m_iDevIndex, OPERATION_FAIL_T, "NET_DVR_ManualSnap");
+-        return FALSE;
++        exitCode = FALSE;
++        goto free_buffers;
+     }  
+     else
+ 	{
+@@ -1453,7 +1455,8 @@ BOOL CMyCctvApp::OnGetPlateNo(int id,CString &plateno,int option,const char *pic
+             if (lHandle == INVALID_HANDLE_VALUE)
+             {
+ //                TRACE("create file failed! Error code:%d", WSAGetLastError());
+-                return 2;
++                exitCode = 2;
++                goto free_buffers;
+             }	
+ 
+ 		}
+@@ -1472,7 +1475,8 @@ BOOL CMyCctvApp::OnGetPlateNo(int id,CString &plateno,int option,const char *pic
+ 				if (lHandle == INVALID_HANDLE_VALUE)
+ 				{
+ //					TRACE("create file failed! Error code:%d", WSAGetLastError());
+-					return 2;
++					exitCode = 2;
++					goto free_buffers;
+ 				}                
+ 			}
+ 		}
+@@ -1486,11 +1490,13 @@ BOOL CMyCctvApp::OnGetPlateNo(int id,CString &plateno,int option,const char *pic
+             if (lHandle == INVALID_HANDLE_VALUE)
+             {
+ //                TRACE("create file failed! Error code:%d", WSAGetLastError());
+-                return 2;
++                exitCode = 2;
++                goto free_buffers;
+             }
+         }
+ 	}
+ 
++free_buffers:
+ 	if (NULL != m_struResult.pBuffer1)
+ 	{
+ 		delete []m_struResult.pBuffer1;
+@@ -1502,6 +1508,7 @@ BOOL CMyCctvApp::OnGetPlateNo(int id,CString &plateno,int option,const char *pic
+ 		delete []m_struResult.pBuffer2;
+ 		m_struResult.pBuffer2 = NULL;
+ 	}
++	if(exitCode != -1) return exitCode;
+ 
+ 	plateno.TrimRight();
+ 
