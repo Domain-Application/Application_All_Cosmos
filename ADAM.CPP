@@ -1,5 +1,5 @@
 // adam.cpp : implementation of the CMainFrame class
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 
 #include "stdafx.h"
 #include "adamtcp.h"
@@ -161,13 +161,106 @@ int adamtcp_ReadCoil(char *szIPAddress, WORD wDeviceID, WORD wStartAddress, WORD
     return iRetVal;
 }
 
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0400)
+extern "C" WINBASEAPI BOOL WINAPI TryEnterCriticalSection(LPCRITICAL_SECTION lpCriticalSection);
+#endif
+
+//One PLC request at a time (poll thread and UI coil writes). A critical section, not a mutex:
+//a kernel handle created at start-up was closed by other code (Notes: CPP_PROGRAMMING_NOTES.md).
+class CPlcLock
+{
+public:
+	CPlcLock() { InitializeCriticalSection(&cs); }
+	~CPlcLock() { DeleteCriticalSection(&cs); }
+	BOOL Lock(DWORD ms)
+	{
+		DWORD start = GetTickCount();
+		while(!TryEnterCriticalSection(&cs)) {
+			if(GetTickCount() - start >= ms) return FALSE;
+			Sleep(10);
+		}
+		return TRUE;
+	}
+	void Unlock() { LeaveCriticalSection(&cs); }
+private:
+	CRITICAL_SECTION cs;
+};
+static CPlcLock plcLock;
+static CWinThread *plcPollThread = NULL;	//set and cleared on the UI thread only
+
+//Coil writes queued for the PLC thread, kept in order (close coil off before open coil on).
+struct CoilWrite { int id; BOOL on; };
+#define COIL_QUEUE_SIZE 256
+static CoilWrite coilQueue[COIL_QUEUE_SIZE];
+static int coilHead = 0, coilCount = 0;
+static CPlcLock coilLock;
+
+static void QueueCoilWrite(int Id,BOOL OnOFF)
+{
+	coilLock.Lock(INFINITE);
+	for(int i = coilCount - 1; i >= 0; i--) {	//same coil already waiting with this value: nothing to add
+		CoilWrite &q = coilQueue[(coilHead + i) % COIL_QUEUE_SIZE];
+		if(q.id != Id) continue;
+		if(q.on == OnOFF) {
+			coilLock.Unlock();
+			return;
+		}
+		break;
+	}
+	if(coilCount == COIL_QUEUE_SIZE) {		//PLC thread stuck: drop the oldest
+		coilHead = (coilHead + 1) % COIL_QUEUE_SIZE;
+		coilCount--;
+	}
+	CoilWrite &w = coilQueue[(coilHead + coilCount) % COIL_QUEUE_SIZE];
+	w.id = Id;
+	w.on = OnOFF;
+	coilCount++;
+	coilLock.Unlock();
+}
+
+static BOOL PopCoilWrite(CoilWrite &w)
+{
+	coilLock.Lock(INFINITE);
+	BOOL found = coilCount > 0;
+	if(found) {
+		w = coilQueue[coilHead];
+		coilHead = (coilHead + 1) % COIL_QUEUE_SIZE;
+		coilCount--;
+	}
+	coilLock.Unlock();
+	return found;
+}
+
+static void WriteCoilNow(int Id,BOOL OnOFF);
+
+static void WriteQueuedCoils()
+{
+	CoilWrite w;
+	for(int n = 0; n < 16 && PopCoilWrite(w); n++) {	//at most 16, so the reads never starve
+		BOOL locked = plcLock.Lock(3000);
+		WriteCoilNow(w.id, w.on);
+		if(locked) plcLock.Unlock();
+	}
+}
+
 void WriteCoil(int Id,BOOL OnOFF)
 {
 	if(Id<0) return;
 
-	WriteCoilFlag = 1;
-
+	if(plcPollThread) {						//the PLC thread writes it within 100 ms
+		QueueCoilWrite(Id, OnOFF);
+		return;
+	}
+	BOOL locked = plcLock.Lock(3000);	//no PLC thread yet: write here, as before
 	SetADAM_IPAdd();
+	WriteCoilNow(Id, OnOFF);
+	if(locked) plcLock.Unlock();
+}
+
+//Uses szIPAddress as set by SetADAM_IPAdd(); the poll thread must not read the weighbridge record.
+static void WriteCoilNow(int Id,BOOL OnOFF)
+{
+	WriteCoilFlag = 1;
 
     CString s;
 
@@ -247,14 +340,24 @@ void WriteCoil(int Id,BOOL OnOFF)
 
 int readADAMFlag = 0;
 int fvalue[9];
+static int ReadPlc(BYTE *inbuff,int function);
+
 int readADAMData(BYTE *inbuff,int function,int step)
+{
+	if(!plcLock.Lock(3000)) return -2;
+	SetADAM_IPAdd();
+	int flag = ReadPlc(inbuff, function);
+	plcLock.Unlock();
+	return flag;
+}
+
+//Uses szIPAddress as set by SetADAM_IPAdd(); the poll thread must not read the weighbridge record.
+static int ReadPlc(BYTE *inbuff,int function)
 {
     if(WriteCoilFlag) {
         addLog("read adam busy");
         return -2;
     }
-
-	SetADAM_IPAdd();
 
     if(ADAMSimulator==2) {    //modbus TCP
 
@@ -390,4 +493,63 @@ int CheckManualOpenBarrier(int sq,CListBox  &m_list)
         }
     }
 	return flag;
+}
+
+//PLC polling thread: the read CSecurity timer 3 did inline, so a slow or dead PLC cannot freeze the screen.
+static volatile LONG plcPollGeneration = 0;
+static volatile DWORD plcLastOkTick = 0;
+
+static UINT PlcPollThreadProc(LPVOID pParam)
+{
+	LONG generation = (LONG)pParam;
+
+	while(generation == plcPollGeneration) {
+		WriteQueuedCoils();
+
+		int flag = -2;
+		if(plcLock.Lock(3000)) {
+			flag = ReadPlc(adamData, 0);		//the same read as before: mode 2 reads the coils into adamData
+			plcLock.Unlock();
+		}
+		if(flag != -2 && (ADAMSimulator != 2 || (flag == TRUE && _modbus_error_code == 0))) {
+			plcLastOkTick = GetTickCount();
+		}
+		for(int i=0; i<5 && generation == plcPollGeneration; i++) {
+			Sleep(100);
+			WriteQueuedCoils();
+		}
+	}
+	WriteQueuedCoils();						//writes asked for just before the stop
+	return 0;
+}
+
+void StartPlcPolling()
+{
+	if(plcPollThread || ADAMSimulator == 0) return;	//0: CMainFrame::OnOpenOtherFiles has not set the mode yet
+	SetADAM_IPAdd();						//read the weighbridge record here, on the UI thread
+	plcLastOkTick = GetTickCount();
+	plcPollThread = AfxBeginThread(PlcPollThreadProc, (LPVOID)plcPollGeneration, THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
+	if(plcPollThread) {
+		plcPollThread->m_bAutoDelete = FALSE;
+		plcPollThread->ResumeThread();
+	}
+}
+
+void StopPlcPolling()
+{
+	if(!plcPollThread) return;
+	InterlockedIncrement((LONG *)&plcPollGeneration);
+	if(WaitForSingleObject(plcPollThread->m_hThread, 3000) == WAIT_OBJECT_0) {
+		delete plcPollThread;
+	}
+	else {
+		plcPollThread->m_bAutoDelete = TRUE;	//still in a PLC call: MFC frees it when it ends
+	}
+	plcPollThread = NULL;
+}
+
+BOOL PlcHasSignal()
+{
+	if(!plcPollThread) return TRUE;			//not polling yet: nothing to report
+	return GetTickCount() - plcLastOkTick < 3000;
 }

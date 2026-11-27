@@ -5,7 +5,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 // Security.h : header file
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 
 #include "DynamicLED.h"
 #include <jpgpicture.h>
@@ -70,6 +70,8 @@ public:
 	//}}AFX_DATA
     CDynamicLED m_led[9];
 	BOOL isLPR_OK, isCNR_OK;
+	BOOL m_photoBusy;			//photo thread running
+	DWORD m_photoStartTick;
 
 
 // Overrides

@@ -1,3 +1,4 @@
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 #include "stdafx.h"
 #include "MENU.h"
 #include "comm.h"
@@ -7,6 +8,7 @@
 #include "ChangeWeighingType.h"
 #include "tcpServer.h"
 #include "WB.H"
+#include "myfrm.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -34,6 +36,7 @@ BEGIN_MESSAGE_MAP(CNView, CCctvView)
 	ON_BN_CLICKED(IDC_BUTTON1, OnButton1)
 	ON_BN_CLICKED(IDC_BUTTON2, OnButton2)
     ON_MESSAGE(WM_NEW_MESSAGE, OnNewMessage)
+    ON_MESSAGE(WM_ANPR_ERROR, OnAnprError)
 END_MESSAGE_MAP()
 
 CNView *pView = NULL;
@@ -48,6 +51,7 @@ CNView::CNView(): CCctvView(app->IDD_DOMVIEW)
     manual_open_barrier2 = weighbridge.lval(weighbridge_MOB2);
     gateOpened_By_Security = FALSE;
     startOpenBarrier = FALSE;
+    m_plcSignal = TRUE;
 }
 
 void RecordStatusLog(const CString str)//Ver 2.05
@@ -115,76 +119,94 @@ void RecordStatusLog(const CString str)//Ver 2.05
     return 0;
 }
 
+struct ServerThreadParam
+{
+    ServerInfo* pInfo;      // read only for its generation; the UI thread gets it back in wParam
+    int port;
+    HWND hWnd;
+    LONG generation;
+    CString portLog;
+};
+
 UINT __cdecl ServerThreadFunc(LPVOID pParam)
 {
     log_proceeding("Start serverThreadFunc");
-    ServerInfo* pInfo = (ServerInfo*)pParam;
-    if (!pInfo) return 0;
+    ServerThreadParam* pThreadParam = (ServerThreadParam*)pParam;
+    ServerInfo* pInfo = pThreadParam->pInfo;
+    int port = pThreadParam->port;
+    HWND hWnd = pThreadParam->hWnd;
+    LONG generation = pThreadParam->generation;
+    CString portLog = (LPCTSTR)pThreadParam->portLog;
+    delete pThreadParam;
 
-    int port = pInfo->port;
-    CNView* pView = pInfo->pView;
-
-    // Initialize sockets for this thread
-    if (!AfxSocketInit())
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(1,1), &wsa) != 0)
         return 0;
 
     CTcpServer server;
-    pInfo->pServer = &server;
-
     if (!server.StartServer(port))
     {
-        pInfo->pServer = NULL;
+        ::PostMessage(hWnd, WM_ANPR_ERROR, port, 0);
+        WSACleanup();
         return 0;
     }
 
     CString data;
-    CString portLog;
-    portLog.Format("%s_lpr.xml", pInfo->portName);
-
-    // Loop and wait for messages
-    while (pInfo->bRunning)
+    while (generation == pInfo->generation)
     {
-        // Wait for client
-        if (!server.AcceptClient())
-        {  
-            break;
-        }
-
-        if (!pInfo->bRunning)
-            break;
+        if (server.WaitClient(500) <= 0)
+            continue;
 
         DWORD dwReturn;
         HANDLE hFile = CreateFile(portLog, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        while (TRUE)
+        while (generation == pInfo->generation)
         {
-            data.Empty();
-            int len = server.ReceiveData(data);
-
-            if (len <= 0)
-            {
-                break; // client disconnected
-            }
+            int len = server.ReceiveData(data, 500);
+            if (len == 0) continue;
+            if (len < 0) break;     // client disconnected
 
             if (hFile != INVALID_HANDLE_VALUE)
             {
-                WriteFile(hFile, data, len, &dwReturn, NULL);
+                WriteFile(hFile, (LPCTSTR)data, len, &dwReturn, NULL);
             }
-            // Send message to dialog (UI thread)
-            if (::IsWindow(pView->m_hWnd))
-                ::PostMessage(pView->m_hWnd, WM_NEW_MESSAGE, (WPARAM)pInfo, (LPARAM)new CString(data));
+            CString *pMsg = new CString(data);
+            if (!::PostMessage(hWnd, WM_NEW_MESSAGE, (WPARAM)pInfo, (LPARAM)pMsg))
+                delete pMsg;        // view already closed
         }
         if (hFile != INVALID_HANDLE_VALUE)
         {
             CloseHandle(hFile);
         }
-        
         server.CloseClient();
     }
 
     server.Close();
-    pInfo->pServer = NULL;
+    WSACleanup();
     log_proceeding("End serverThreadFunc");
     return 0;
+}
+
+LRESULT CNView::OnAnprError(WPARAM wParam, LPARAM lParam)
+{
+    CString s;
+    s.Format("ANPR listener cannot use port %i (already in use?).", (int)wParam);
+    AfxMessageBox(s);
+    return 0;
+}
+
+//Stops one listener. FALSE: its thread is still ending and still reads pInfo->generation, so pInfo must stay.
+BOOL CNView::StopTCPServer(ServerInfo* pInfo)
+{
+    InterlockedIncrement((LONG *)&pInfo->generation);
+    if (!pInfo->pThread) return TRUE;
+
+    BOOL ended = WaitForSingleObject(pInfo->pThread->m_hThread, 3000) == WAIT_OBJECT_0;
+    if (ended)
+        delete pInfo->pThread;
+    else
+        pInfo->pThread->m_bAutoDelete = TRUE;  // still finishing: MFC frees it when it ends
+    pInfo->pThread = NULL;
+    return ended;
 }
 
 void CNView::OnTimer(UINT nIDEvent) 
@@ -229,80 +251,52 @@ void CNView::OnCreateTCPServer(const CString& portFieldName)
     if (pInfo)
     {
         DWORD dwExitCode;
-        if (pInfo->pThread && GetExitCodeThread(pInfo->pThread->m_hThread, &dwExitCode) && dwExitCode == STILL_ACTIVE)
-        {
-            if (newPort == pInfo->port)
-            {
-                return; // Already running on this port
-            }
-            else
-            {
-                // Stop current server for this port field
-                pInfo->bRunning = FALSE;
-
-                // Connect a dummy socket to unblock Accept()
-                CSocket killerSocket;
-                if (killerSocket.Create())
-                {
-                    killerSocket.Connect(_T("127.0.0.1"), pInfo->port);
-                    killerSocket.Close();
-                }
-                
-                WaitForSingleObject(pInfo->pThread->m_hThread, 5000);
-                delete pInfo->pThread;
-                pInfo->pThread = NULL;
-                pInfo->pServer = NULL;
-            }
-        }
-        else
-        {
-            if (pInfo->pThread) delete pInfo->pThread;
-            pInfo->pThread = NULL;
-            pInfo->pServer = NULL;
-        }
+        if (pInfo->pThread && GetExitCodeThread(pInfo->pThread->m_hThread, &dwExitCode) && dwExitCode == STILL_ACTIVE && newPort == pInfo->port)
+            return; // Already running on this port
+        if (!StopTCPServer(pInfo))
+            pInfo = NULL;       // its thread still reads it: leave it allocated and use a new one
     }
-    else
+    if (!pInfo)
     {
         pInfo = new ServerInfo;
         pInfo->portName = portFieldName;
-        pInfo->pView = this;
+        pInfo->generation = 0;
+        pInfo->pThread = NULL;
         pInfo->strBuffer = _T("");
         m_serverInstances[portFieldName] = pInfo;
     }
 
     pInfo->port = newPort;
-    pInfo->bRunning = TRUE;
-    pInfo->pThread = AfxBeginThread(ServerThreadFunc, pInfo, THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
+    ServerThreadParam* pParam = new ServerThreadParam;
+    pParam->pInfo = pInfo;
+    pParam->port = newPort;
+    pParam->hWnd = GetSafeHwnd();
+    pParam->generation = pInfo->generation;
+    pParam->portLog.Format("%s_lpr.xml", pInfo->portName);
+
+    pInfo->pThread = AfxBeginThread(ServerThreadFunc, pParam, THREAD_PRIORITY_NORMAL, 0, CREATE_SUSPENDED);
     if (pInfo->pThread)
     {
         pInfo->pThread->m_bAutoDelete = FALSE;
         pInfo->pThread->ResumeThread();
     }
+    else
+    {
+        delete pParam;
+    }
 }
 
 void CNView::OnDestroy()
 {
+    StopPlcPolling();
+
     CSingleLock lock(&m_csServer, TRUE);
 
     for (std::map<CString, ServerInfo*>::iterator it = m_serverInstances.begin(); it != m_serverInstances.end(); ++it)
     {
         ServerInfo* pInfo = (*it).second;
-        if (pInfo)
-        {
-            pInfo->bRunning = FALSE;
-            if (pInfo->pThread)
-            {
-                CSocket killerSocket;
-                if (killerSocket.Create())
-                {
-                    killerSocket.Connect(_T("127.0.0.1"), pInfo->port);
-                    killerSocket.Close();
-                }
-                WaitForSingleObject(pInfo->pThread->m_hThread, 5000);
-                delete pInfo->pThread;
-            }
-            delete pInfo;
-        }
+        if (pInfo && StopTCPServer(pInfo))
+            delete pInfo;       // else left allocated: its thread may still read it
     }
     m_serverInstances.clear();
 
@@ -369,6 +363,8 @@ int CNView::OnGw()
     HWND hWnd2 = ::GetDlgItem( GetSafeHwnd(), IDC_STABLE_FLAG);
     BST = flagStable ? BST_CHECKED : BST_UNCHECKED;
     ::SendMessage(hWnd2, BM_SETCHECK, BST, 0L);
+    StartPlcPolling();		//PLC reads and coil writes run on their own thread (ADAM.CPP)
+    ShowPlcSignal();
     iDOCounter++;
     int weight_status = weighbridge.lval(weighbridge_ALT);
     if(weight_status) {
@@ -381,6 +377,17 @@ int CNView::OnGw()
 	}
     InitiateDualMode();
     return TRUE;
+}
+
+void CNView::ShowPlcSignal()
+{
+    BOOL signal = PlcHasSignal();
+    if(signal == m_plcSignal) return;
+
+    m_plcSignal = signal;
+    log_proceeding(signal ? "PLC replies again" : "PLC no reply for 3 s");
+    CMyFrame *pFrame = (CMyFrame *)AfxGetMainWnd();
+    if(pFrame) pFrame->OnSetPane(0, signal ? "" : "PLC no reply");
 }
 
 

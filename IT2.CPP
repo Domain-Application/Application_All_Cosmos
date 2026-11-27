@@ -1,6 +1,6 @@
 
 // It2.cpp : implementation file
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
  
 #include "stdafx.h"
 #include "menu.h"
@@ -86,6 +86,13 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CIt2 message handlers
 void CIt2::OnOK()
+{
+	FreezeWeightTimer(this, TRUE);
+	DoOK();
+	FreezeWeightTimer(this, FALSE);
+}
+
+void CIt2::DoOK()
 {
     if(iType==1) {			//receiving only
 		if(m_contno.GetLength() != 11 && df->val(SWT) <= 0) 

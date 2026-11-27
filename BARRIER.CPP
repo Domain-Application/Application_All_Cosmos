@@ -1,5 +1,5 @@
 // Barrier.cpp : implementation file
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 
 #include "stdafx.h"
 #include "menu.h"
@@ -191,10 +191,7 @@ void CBarrier::OnStartOpenTimer()
 {
     openCounter = 0;
     TimerEvent = 1 + no * 2;
-    UINT flag2 = AfxGetMainWnd()->SetTimer(TimerEvent,500,NULL);
-	if(flag2==TimerEvent) {
-		InProgress = TRUE;
-	}
+	InProgress = TRUE;		//no retry timer: OnTimer never received it
 }
 
 void CBarrier::OpenBarrier()
@@ -234,10 +231,7 @@ void CBarrier::OpenBarrier()
 void CBarrier::OnStartCloseTimer()
 {
     TimerEvent = 2 + no * 2;
-    UINT flag2 = AfxGetMainWnd()->SetTimer(TimerEvent,500,NULL);
-	if(flag2==TimerEvent) {
-		InProgress = TRUE;
-	}
+	InProgress = TRUE;
 	
 }
 

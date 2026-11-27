@@ -5,7 +5,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 // It1.h : header file
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 
 #include "fedit.h"
 /////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,7 @@ public:
 	 int iType;
      CString m_contno,m_vehicle,m_tt;
      CString m_acsRefNo, m_acsUnit;     // AllCosmos Ref No / DO No and PO unit from the pick list
+	 void DoOK();
 
 // Dialog Data
      //{{AFX_DATA(CIt1)

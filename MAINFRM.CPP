@@ -1,5 +1,5 @@
 // MainFrm.cpp : implementation of the CMainFrame class
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 
 #include "stdafx.h"
 #include "menu.h"
@@ -27,6 +27,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMyFrame)
     ON_COMMAND(ID_USER, OnUser)
     ON_COMMAND(ID00031, OnPassword)
 	//}}AFX_MSG_MAP
+	ON_MESSAGE(WM_SNAPLOG, OnSnapLog)
 END_MESSAGE_MAP()
 
 
@@ -62,9 +63,23 @@ void CMainFrame::OnOpenOtherFiles()
     BOOL bOpen = SetCommThread(hWnd,FALSE);
 }
 
+void CMainFrame::OnCloseThreads()
+{
+    StopPlcPolling();		//before CMyFrame::OnClose closes the tables
+    CMyFrame::OnCloseThreads();
+}
+
 void CMainFrame::OnClose()
 {
     CloseCommThread();
     CMyFrame::OnClose();
+}
+
+LRESULT CMainFrame::OnSnapLog(WPARAM wParam, LPARAM lParam)
+{
+	SnapLogMsg *p = (SnapLogMsg *)lParam;
+	app->OnLogsnapMsg(p->df, p->jpgkey, p->i, p->msg);
+	delete p;
+	return 0;
 }
 

@@ -1,5 +1,5 @@
 // PMWeighing.cpp : implementation file
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 
 #include "stdafx.h"
 #include "menu.h"
@@ -110,7 +110,14 @@ void CPMWeighing::OnTimer(UINT nIDEvent)
 	CReqitem::OnTimer(nIDEvent);
 }
 
-void CPMWeighing::OnOK() 
+void CPMWeighing::OnOK()
+{
+	FreezeWeightTimer(this, TRUE);
+	DoOK();
+	FreezeWeightTimer(this, FALSE);
+}
+
+void CPMWeighing::DoOK()
 {
     int key = GetCheckedRadioButton(IDC_RADIO1,IDC_RADIO2);
 	((CMenuApp*)AfxGetApp())->SetPushPlateno2("");

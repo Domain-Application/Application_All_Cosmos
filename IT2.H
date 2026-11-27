@@ -5,7 +5,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 // It1.h : header file
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 
 #include "fedit.h"
 #include "msflexgrid.h"
@@ -27,6 +27,7 @@ public:
      virtual void OnDblClickMsflexgrid1();
      void ShowAcsFields();
      BOOL AcsBinIsOk();
+     void DoOK();
 // Dialog Data
      //{{AFX_DATA(CIt2)
      enum { IDD = IDD_IT2 };

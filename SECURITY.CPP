@@ -1,5 +1,5 @@
 // Security.cpp : implementation file
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 
 #include "stdafx.h"
 #include "menu.h"
@@ -35,6 +35,8 @@ CSecurity::CSecurity(CWnd* pParent /*=NULL*/)
 	isAutoMode = FALSE;
 	isLPR_OK = isCNR_OK = TRUE;
 	ManualOpenFrontBarrier = ManualOpenBackBarrier = FALSE;
+	m_photoBusy = FALSE;
+	m_photoStartTick = 0;
 }
 
 
@@ -125,7 +127,9 @@ UINT PhotoThreadProc(LPVOID pParam)
         }
         // Post message to UI thread
         // We pass the string pointer in LPARAM. Receiver must delete it.
-        ::PostMessage(p->hWnd, WM_PHOTO_PROCESSED, (WPARAM)i, (LPARAM)pResultStr);
+        if(!::PostMessage(p->hWnd, WM_PHOTO_PROCESSED, (WPARAM)i, (LPARAM)pResultStr)) {
+            delete pResultStr;		//dialog already closed
+        }
     }
     
     // Signal completion with 0
@@ -145,6 +149,7 @@ void CSecurity::OnDestroy()
 {
     KillTimer(1);
 	KillTimer(2);
+	KillTimer(3);
 	KillTimer(9001);
 	//If not removing this while closing the system. System will keep remaining the container number in motion detect while container reverse and tanker coming in
 	if(!isblank(((CMenuApp*)AfxGetApp())->GetPushPlateno2()))
@@ -216,7 +221,6 @@ BOOL CSecurity::OnInitDialog()
 
 void CSecurity::OnGW()
 {
-	log_proceeding("Start Gw");
     char tmp[80];
 
 	if(cweight==-1) {
@@ -235,7 +239,6 @@ void CSecurity::OnGW()
     HWND hWnd2 = ::GetDlgItem( GetSafeHwnd(), IDC_STABLE_FLAG);
     BST = flagStable ? BST_CHECKED : BST_UNCHECKED;
     ::SendMessage(hWnd2, BM_SETCHECK, BST, 0L);
-	log_proceeding("End Gw");
 }
 
 void CSecurity::OnTimer(UINT nIDEvent) 
@@ -263,8 +266,7 @@ void CSecurity::OnTimer(UINT nIDEvent)
 	}
     else if(nIDEvent==3)
     {
-        int flag = readADAMData(adamData, 0); //Review this if in future going change from ADAM to PLC
-        m_S1.Show();
+        m_S1.Show();		//adamData comes from PlcPollThreadProc (ADAM.CPP)
         m_S2.Show();
     }
     OnGW();
@@ -282,8 +284,12 @@ void CSecurity::SetupIcons()
     GetDlgItem(IDC_S2)->ShowWindow(SW_HIDE);
 }
 
-void CSecurity::OnCancel() 
+void CSecurity::OnCancel()
 {
+    if(m_photoBusy && GetTickCount() - m_photoStartTick < 10000) {	//let the cameras finish first
+        MessageBeep(MB_ICONEXCLAMATION);
+        return;
+    }
     CFM20Dlg::OnCancel();
 }
 
@@ -603,7 +609,9 @@ void CSecurity::OnTakePhotos()
     
     m_progress.SetRange32(1, p->TotalCameras);
     m_progress.SetPos(0);
-    
+
+    m_photoBusy = TRUE;
+    m_photoStartTick = GetTickCount();
     AfxBeginThread(PhotoThreadProc, p);
 	log_proceeding("End Take Photo");
 }
@@ -612,6 +620,7 @@ LRESULT CSecurity::OnPhotoProcessed(WPARAM wParam, LPARAM lParam)
 {
     int i = (int)wParam;
     if (i == 0) {
+        m_photoBusy = FALSE;
         UpdateData(FALSE);
         m_showjpg = 1;
         GetDlgItem(IDOK)->EnableWindow(TRUE);

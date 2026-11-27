@@ -1,5 +1,5 @@
 // menu.cpp : Defines the class behaviors for the application.
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 
 #include "stdafx.h"
 #include "menu.h"
@@ -355,6 +355,23 @@ int CMenuApp::OnGetPlateNo(int id,CString &plateno,int option,const char *picFol
 	plateno.TrimRight();
 
     return flagGetPlateNo;
+}
+
+void CMenuApp::OnLogsnapMsg(DB *df,int jpgkey,int i,const char *msg)
+{
+	if(GetCurrentThreadId() != m_nThreadID) {	//photo thread: the UI thread writes LOG_SNAPSHOT
+		HWND hMain = m_pMainWnd ? m_pMainWnd->GetSafeHwnd() : NULL;
+		SnapLogMsg *p = new SnapLogMsg;
+		p->df = df;
+		p->jpgkey = jpgkey;
+		p->i = i;
+		p->msg = msg;
+		if(!hMain || !::PostMessage(hMain, WM_SNAPLOG, 0, (LPARAM)p)) {
+			delete p;
+		}
+		return;
+	}
+	CMyCctvApp::OnLogsnapMsg(df, jpgkey, i, msg);
 }
 
 void CMenuApp::SetPushPlateno(const CString& val) { CSingleLock lock(&m_csPlateNo, TRUE); m_push_plateno = val; }

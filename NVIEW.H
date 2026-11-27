@@ -1,5 +1,5 @@
 // NView.h : interface of the CNView class
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 /////////////////////////////////////////////////////////////////////////////
 //{{AFX_INCLUDES()
 #include "msflexgrid.h"
@@ -29,15 +29,14 @@
 #include <map>
 
 #define WM_NEW_MESSAGE (WM_USER + 100)
+#define WM_ANPR_ERROR (WM_USER + 101)
 
 struct ServerInfo {
     int port;
     CString portName;
-    BOOL bRunning;
+    volatile LONG generation;	//its listener thread runs while this matches the value it started with
     CWinThread* pThread;
-    CTcpServer* pServer;
     CString strBuffer;
-    class CNView* pView;
 };
 
 class CNView : public CCctvView
@@ -66,6 +65,9 @@ public: // create from serialization only
     std::map<CString, ServerInfo*> m_serverInstances;
     
     void OnCreateTCPServer(const CString& portFieldName);
+    BOOL StopTCPServer(ServerInfo* pInfo);
+	BOOL m_plcSignal;
+	void ShowPlcSignal();
 	BOOL requireOpenBackBarrier;
 	int manual_open_barrier1;
     int manual_open_barrier2;
@@ -115,6 +117,7 @@ public:
 	afx_msg void OnMouseDownMsflexgrid2(short Button, short Shift, long x, long y);
 	afx_msg void RightClickGrid(CMSFlexGrid &grid, int idCol, int vehicleCol);
 	afx_msg LRESULT OnNewMessage(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnAnprError(WPARAM wParam, LPARAM lParam);
     afx_msg void OnDestroy();
 	DECLARE_EVENTSINK_MAP()
 	//}}AFX_MSG

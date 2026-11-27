@@ -1,5 +1,5 @@
 // menu.h : main header file for the MENU application
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 
 #if !defined(AFX_MENU_H__D6EA9606_A1F2_11D0_8F37_945AC87D3839__INCLUDED_)
 #define AFX_MENU_H__D6EA9606_A1F2_11D0_8F37_945AC87D3839__INCLUDED_
@@ -59,6 +59,18 @@ extern int adamtcp_WriteCoil(char *szIPAddress, WORD wDeviceID, WORD wStartAddre
 extern BOOL ILoopStatus(int no);
 extern BOOL BarrierStatus(int no);
 extern void WriteCoil(int Id,BOOL OnOFF);
+extern void StartPlcPolling();
+extern void StopPlcPolling();
+extern BOOL PlcHasSignal();
+extern void FreezeWeightTimer(CDialog *dlg, BOOL freeze);
+
+#define WM_SNAPLOG (WM_APP + 0x51)	//photo thread -> main frame: write LOG_SNAPSHOT on the UI thread
+struct SnapLogMsg {
+	DB *df;
+	int jpgkey;
+	int i;
+	CString msg;
+};
 #define BarrierIsOpen 1
 #define BarrierIsClose 0
 extern void SetWindowLocation(CDialog *p);
@@ -208,6 +220,7 @@ public:
     virtual void SetTitleColor();
     virtual int SetAlarmChannel(int iCamera);
     virtual int OnGetPlateNo(int id,CString &plateno,int option=0xff,const char *picFolder="");
+    virtual void OnLogsnapMsg(DB *df,int jpgkey,int i,const char *msg);
     virtual void LprDetected(const char *no,int CameraIndex);
     virtual void LprLog(const char *no,int CameraIndex,const char *platePhoto,int mode);
     virtual void AddLog(int iDeviceIndex, int iLogType, const char* format, ...);

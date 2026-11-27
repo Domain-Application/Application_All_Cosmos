@@ -1,5 +1,5 @@
 // It1.cpp : implementation file
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
  
 #include "stdafx.h"
 #include "menu.h"
@@ -52,7 +52,24 @@ END_MESSAGE_MAP()
 /////////////////////////////////////////////////////////////////////////////
 // CIt1 message handlers
  
+void FreezeWeightTimer(CDialog *dlg, BOOL freeze)
+{
+	if(freeze) {
+		dlg->KillTimer(1);
+	}
+	else if(dlg->ContinueModal()) {
+		dlg->SetTimer(1,250,NULL);
+	}
+}
+
 void CIt1::OnOK()
+{
+	FreezeWeightTimer(this, TRUE);
+	DoOK();
+	FreezeWeightTimer(this, FALSE);
+}
+
+void CIt1::DoOK()
 {
 	ReplaceRecord();
     if (IsSaveConditionOk(df)==0) return;

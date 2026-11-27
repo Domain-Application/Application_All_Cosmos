@@ -1,5 +1,5 @@
 // MainFrm.h : interface of the CMainFrame class
-//
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 /////////////////////////////////////////////////////////////////////////////
 
 #if !defined(AFX_MAINFRM_H__D6EA960A_A1F2_11D0_8F37_945AC87D3839__INCLUDED_)
@@ -34,12 +34,14 @@ public:
 // Implementation
 public:
     virtual void OnOpenOtherFiles();
+    virtual void OnCloseThreads();
 
 protected:  // control bar embedded members
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CMainFrame)
 	//}}AFX_MSG
+	afx_msg LRESULT OnSnapLog(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 };
 

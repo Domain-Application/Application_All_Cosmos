@@ -1,3 +1,4 @@
+//Notes: docs/CPP_PROGRAMMING_NOTES.md.
 #include "reqitem.h"
 class CPMWeighing : public CReqitem
 {
@@ -9,6 +10,7 @@ public:
 	BOOL hideRoRoFlag;	
 	enum { IDD = IDD_PMWeighing };
 	CString	m_vehicle;
+	void DoOK();
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);  
 protected:
