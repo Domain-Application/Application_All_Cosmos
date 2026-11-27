@@ -9,6 +9,7 @@
 #include "FastSearch.h"
 #include "Export4ASCII.h"
 #include "resource.h"
+#include "AcsTicketMapping.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -142,6 +143,23 @@ void CWb::ShowInformation()
 	else {
         GetDlgItem(IDC_BUTTON7)->EnableWindow(FALSE);
     }
+    ShowAcsStatus();
+}
+
+void CWb::ShowAcsStatus()
+{
+    BOOL bActive = AcsIsActive(df);
+    AcsShowCtrls(this, bActive, IDC_ACS_STATUS, IDC_ACS_RESEND);
+    if(!bActive) return;
+    CString s = AcsStatusText(df);
+    SetDlgItemText(IDC_ACS_STATUS, s);
+    GetDlgItem(IDC_ACS_RESEND)->EnableWindow(!s.IsEmpty());
+}
+
+void CWb::OnAcsResend()
+{
+    AcsResendTicket(df);
+    ShowAcsStatus();
 }
 
 void CWb::ShowInitFrame(CMSFlexGrid *grid,DB *sub)
@@ -183,7 +201,8 @@ BEGIN_MESSAGE_MAP(CWb, CParent)
 	ON_BN_CLICKED(IDC_BUTTON5, OnPM1WT)
 	ON_BN_CLICKED(IDC_BUTTON6, OnPM2WT)
 	ON_BN_CLICKED(IDC_BUTTON7, OnSetCompleteTicket)
-	
+	ON_BN_CLICKED(IDC_ACS_RESEND, OnAcsResend)
+
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 

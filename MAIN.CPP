@@ -128,6 +128,9 @@ int CMenuApp::SubProgram(int key)
     case 293:
         AdminDb(&trailer);
         break;
+    case 294:
+        AcsAdminBinLocation();
+        break;
     case M_OTHER*10+2:
         BackupProcess();
         break;

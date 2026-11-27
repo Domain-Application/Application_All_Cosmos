@@ -134,6 +134,7 @@ BEGIN
             MENUITEM "2&91 Set Unit Code",          ID00291
             MENUITEM "29&2 Set Container Information", ID00292
             MENUITEM "29&3 Set Trailer Information", ID00293
+            MENUITEM "29&4 Set AllCosmos Bin Location", ID00294
         END
     END
     POPUP "&3. Utility"
@@ -871,6 +872,8 @@ BEGIN
     EDITTEXT        IDC_EDIT52,70,215,121,12,ES_UPPERCASE | ES_AUTOHSCROLL | 
                     ES_READONLY | WS_VSCROLL
     PUSHBUTTON      "Save complete ticket",IDC_BUTTON7,357,205,191,14
+    LTEXT           "",IDC_ACS_STATUS,197,199,155,17,SS_NOPREFIX
+    PUSHBUTTON      "Resend to AllCosmos",IDC_ACS_RESEND,197,216,80,11
 END
 
 IDD_DESPATCH DIALOGEX 0, 0, 520, 405
@@ -1036,6 +1039,8 @@ BEGIN
                     WS_EX_ACCEPTFILES
     EDITTEXT        IDC_EDIT52,48,214,121,12,ES_UPPERCASE | ES_AUTOHSCROLL | 
                     ES_READONLY | WS_VSCROLL
+    LTEXT           "",IDC_ACS_STATUS,175,199,135,17,SS_NOPREFIX
+    PUSHBUTTON      "Resend to AllCosmos",IDC_ACS_RESEND,175,216,80,11
 END
 
 IDD_DRIVER DIALOG DISCARDABLE  0, 0, 288, 286
@@ -1635,6 +1640,14 @@ BEGIN
                     WS_EX_ACCEPTFILES
     EDITTEXT        IDC_EDIT52,68,191,97,12,ES_UPPERCASE | ES_AUTOHSCROLL | 
                     WS_VSCROLL
+    LTEXT           "AllCosmos Ref No.",IDC_ACS_REFNO_LABEL,175,177,62,12,
+                    SS_CENTERIMAGE
+    EDITTEXT        IDC_ACS_REFNO,240,177,127,12,ES_UPPERCASE | ES_AUTOHSCROLL | 
+                    ES_READONLY
+    LTEXT           "Bin Location",IDC_ACS_BIN_LABEL,175,191,62,12,
+                    SS_CENTERIMAGE
+    EDITTEXT        IDC_ACS_BIN,240,191,60,12,ES_UPPERCASE | ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_ACS_BIN_PICK,303,191,18,12
     CONTROL         "",IDC_MSFLEXGRID1,
                     "{6262D3A0-531B-11CF-91F6-C2863C385E30}",WS_TABSTOP,7,
                     316,445,60

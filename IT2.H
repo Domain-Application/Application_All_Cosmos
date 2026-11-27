@@ -25,6 +25,8 @@ public:
      virtual void OnRefresh();
      virtual void ReplaceSubGrid(long rec,long irec,CMSFlexGrid *m_grid,DB *sub,int IdxItem);
      virtual void OnDblClickMsflexgrid1();
+     void ShowAcsFields();
+     BOOL AcsBinIsOk();
 // Dialog Data
      //{{AFX_DATA(CIt2)
      enum { IDD = IDD_IT2 };
@@ -49,6 +51,7 @@ protected:
         afx_msg void OnDestroy();
         afx_msg void OnTimer(UINT nIDEvent);
 		afx_msg void OnSnapshots();
+        afx_msg void OnAcsBinPick();
         virtual void OnCancel();
         //}}AFX_MSG
         DECLARE_EVENTSINK_MAP()

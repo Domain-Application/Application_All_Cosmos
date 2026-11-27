@@ -79,6 +79,7 @@ BEGIN_MESSAGE_MAP(CIt2, CFEdit)
     //{{AFX_MSG_MAP(CIt2)
     ON_WM_DESTROY()
     ON_WM_TIMER()
+    ON_BN_CLICKED(IDC_ACS_BIN_PICK, OnAcsBinPick)
     //}}AFX_MSG_MAP
 END_MESSAGE_MAP()
  
@@ -108,8 +109,9 @@ void CIt2::OnOK()
     // }
 
 	ReplaceRecord();
-    
+
     if (IsSaveConditionOk(df)==0) return;
+    if(!AcsBinIsOk()) return;
     int key = GetCheckedRadioButton(IDC_RADIO1,IDC_RADIO2);
     ((CMenuApp*)AfxGetApp())->SetPushPlateno2("");
     if(program4 == 1) {
@@ -147,6 +149,7 @@ BOOL CIt2::OnInitDialog()
 		SetDlgItemText( StaticId(SWT), "Buyer Weight");
     }
 	SetDlgItemText( IDC_TITLE, t);
+    ShowAcsFields();
 
     CheckRadioButton( IDC_RADIO1, IDC_RADIO2, IDC_RADIO2);
     m_tt = df->dat[TT];
@@ -165,6 +168,46 @@ BOOL CIt2::OnInitDialog()
 
     return TRUE;  // return TRUE unless you set the focus to a control
                   // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+// Ref No / DO No from the 1st weigh (read-only); Bin Location for receiving only.
+void CIt2::ShowAcsFields()
+{
+    BOOL bActive = AcsIsActive(df);
+    BOOL bBin = bActive && iType==1 && AcsHasBin(df);
+    AcsShowCtrls(this, bActive, IDC_ACS_REFNO_LABEL, IDC_ACS_REFNO);
+    AcsShowCtrls(this, bBin, IDC_ACS_BIN_LABEL, IDC_ACS_BIN, IDC_ACS_BIN_PICK);
+    if(!bActive) return;
+    if(iType==2) SetDlgItemText(IDC_ACS_REFNO_LABEL, "AllCosmos DO No.");
+    SetDlgItemText(IDC_ACS_REFNO, AcsTicketText(df, "API_REF_NO"));
+    if(bBin) {
+        ((CEdit*)GetDlgItem(IDC_ACS_BIN))->LimitText(15);
+        SetDlgItemText(IDC_ACS_BIN, AcsTicketText(df, "API_BIN"));
+    }
+}
+
+// CSL refuses a GRN without a bin; the operator may still save and add it later with Resend.
+BOOL CIt2::AcsBinIsOk()
+{
+    if(iType!=1 || !AcsHasBin(df)) return TRUE;
+    CString ref, bin;
+    GetDlgItemText(IDC_ACS_REFNO, ref);
+    GetDlgItemText(IDC_ACS_BIN, bin);
+    ref.TrimLeft(); ref.TrimRight();
+    bin.TrimLeft(); bin.TrimRight();
+    if(!ref.IsEmpty() && bin.IsEmpty() && MessageBox("Bin Location is blank. CSL needs it for the GRN.\n\nSave anyway? It can be added later with Resend to AllCosmos on the ticket.",
+                                                     "AllCosmos", MB_YESNO | MB_ICONQUESTION) != IDYES) {
+        GetDlgItem(IDC_ACS_BIN)->SetFocus();
+        return FALSE;
+    }
+    lset(df, "API_BIN", bin);
+    return TRUE;
+}
+
+void CIt2::OnAcsBinPick()
+{
+    CString bin;
+    if(AcsPickBin(bin)) SetDlgItemText(IDC_ACS_BIN, bin);
 }
 
 void CIt2::ShowInitFrame()

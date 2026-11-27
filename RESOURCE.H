@@ -332,6 +332,11 @@
 #define IDC_ACS_PICK                    1284
 #define IDC_ACS_REFNO_LABEL             1285
 #define IDC_ACS_LIST                    1286
+#define IDC_ACS_BIN                     1287
+#define IDC_ACS_BIN_PICK                1288
+#define IDC_ACS_BIN_LABEL               1289
+#define IDC_ACS_STATUS                  1290
+#define IDC_ACS_RESEND                  1291
 #define IDC_BAL                         2131
 #define ID_BACK                         32839
 #define ID_EXIT                         32840

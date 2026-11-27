@@ -18,7 +18,10 @@ Lives in the repo at `User_Guide\_kit\`. Built with the `cpp-user-guide-builder`
 | File | Source |
 |---|---|
 | receiving_1st_weigh.png | live, hidden desktop, lorry GUIDE01, closed without saving (Exit > Yes) |
-| receiving_2nd_weigh.png | live, clip-5 run (S000164717) |
+| receiving_2nd_weigh.png | live 2026-11-27, ACST202 2nd weigh (S000164715), cropped 809x555 to fit a landscape page |
+| ticket_status.png | live 2026-11-27, menu 11 with S000164717 loaded, crop of the status line + Resend button |
+| resend_again_ok.png | live 2026-11-27, Resend to AllCosmos on S000164717 (already accepted) |
+| bin_master.png | live 2026-11-27, menu 294 while adding BIN-TEST2 |
 | ref_pick_list.png, resend_list.png, resend_ask.png, resend_ok.png | live, clip-5 run |
 | despatch_1st_weigh.png, do_pick_list.png | cropped from Kelvin's clip 3 video frame (29.5 s / 37.5 s), app area only |
 | msg_rejected.png | cropped from the clip-5 video (30 s) |
@@ -37,5 +40,11 @@ Lives in the repo at `User_Guide\_kit\`. Built with the `cpp-user-guide-builder`
 
 **Live**: AllCosmos Ref No. / DO No. box + "..." (IT1), Utility 39 Resend, the messages in chapter 11 (texts from
 AcsTicketMapping.cpp / IT1.CPP).
+Live since 2026-11-27: Bin Location box + "..." on IT2, ticket-screen status line + Resend to AllCosmos (menus
+11/12/16), menu 294 Set AllCosmos Bin Location.
 **NOT live - keep out of guides**: profile-screen fields for the API URL / user / password (set by IT in the DB);
-`bin_location` (open point).
+the printed ticket does not show the Ref No / bin.
+
+Recipes added 2026-11-27: open a ticket screen with `menucmd` 34475/34476/34480, then type the ticket in 2001 +
+Enter (edit mode; close without saving). Menu 294 = `menucmd` 34758. The bin pick list is hidden on the hidden
+desktop: its first row is preselected, so post `WM_COMMAND 1` (IDOK) to it.

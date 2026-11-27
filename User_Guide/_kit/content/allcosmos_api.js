@@ -17,6 +17,7 @@ module.exports = function guide() {
     ['DO Time In / DO Time Out', 'The same for a despatch lorry.'],
     ['Accepted / refused', 'The website answers every message. Accepted = the website saved it. Refused = it did not; the website says why.'],
     ['Resend', 'Sending a refused ticket again, after fixing the problem.'],
+    ['Bin Location', 'The store bin in CSL where the received goods go. CSL needs it to post the Goods Receipt (GRN). Picked at the receiving 2nd weigh.'],
   ], [3, 7]);
   b.H2('Signs used in this guide');
   b.callout('tip', 'A shortcut or good practice that saves time.');
@@ -37,6 +38,8 @@ module.exports = function guide() {
   b.table(['Screen', 'How to open it'], [
     ['1st-weigh and 2nd-weigh screens', 'Main screen > **F5-> Weighing Process** > Weighing Control: choose **Receiving** or **Despatch**, key in the lorry plate, press **F5-> Confirm Weight**. A lorry not in the yard gets the 1st-weigh screen (1/2); a lorry in the yard gets the 2nd-weigh screen (2/2).'],
     ['Resend list', 'Menu **3. Utility** > **39 AllCosmos Resend Pending Tickets**.'],
+    ['AllCosmos status of one ticket, and its Resend button', 'Menu **1. Weighing** > **11 Receiving Weighing**, **12 Despatch Weighing** (completed tickets) or **16 First Weighing** (lorries in the yard). Open the ticket.'],
+    ['Bin Location list (support)', 'Menu **2. Table** > **29 More Master Setup** > **294 Set AllCosmos Bin Location**.'],
   ], [3.2, 6.8]);
   b.callout('tip', 'Key in the lorry plate without spaces (CCH4092, not CCH 4092). The program keeps plates without spaces; with a space it does not find the lorry in the yard and opens a new 1st weigh.');
 
@@ -54,8 +57,15 @@ module.exports = function guide() {
   b.callout('warn', 'If the box is blank, the program asks "Save anyway?". Answer No and pick the Ref No. Answer Yes only if you cannot find it now; the ticket is then sent later with Resend.');
 
   b.H1('5. Receiving - 2nd Weigh');
-  b.P('Nothing new to key in. Weigh the lorry out as usual, key in **Supplier Wt** and press **Save**. The program sends the received, weighbridge and supplier quantities to the website, in the unit of the Purchase Order (for example MT).');
-  b.fig('receiving_2nd_weigh.png', 'Receiving 2nd-weigh screen (unchanged)');
+  b.P('The 2nd-weigh screen shows the lorry\'s **AllCosmos Ref No.** from the 1st weigh (it cannot be changed here) and a new **Bin Location** box.');
+  b.steps([
+    'Weigh the lorry out as usual and key in **Supplier Wt**.',
+    'Press **...** next to **Bin Location**, click the bin where the goods are stored and press **OK**.',
+    'Press **Save**. The program sends the received, weighbridge and supplier quantities and the bin to the website, in the unit of the Purchase Order (for example MT).',
+  ]);
+  b.fig('receiving_2nd_weigh.png', 'Receiving 2nd-weigh screen: AllCosmos Ref No. (read-only) and Bin Location');
+  b.callout('warn', 'CSL cannot post the Goods Receipt without a bin. If the box is blank, the program asks "Save anyway?". Answer No and pick the bin. Answer Yes only if you cannot now; add the bin later with **Resend to AllCosmos** on the ticket (Chapter 7).');
+  b.callout('note', 'If the bin you need is not in the list, ask support to add it (Chapter 10).');
 
   b.H1('6. Despatch - 1st and 2nd Weigh');
   b.P('On a despatch lorry the box is called **AllCosmos DO No.** It works the same way as the receiving Ref No.');
@@ -84,6 +94,18 @@ module.exports = function guide() {
   b.fig('resend_ok.png', 'The website accepted the ticket');
   b.callout('note', ['In the list, **1st weigh OK** / **2nd weigh OK** show N for the part not accepted yet.', 'A lorry still in the yard can be resent too; its 2nd weigh is then sent normally.', 'The website accepts a resend until its Goods Receipt / Delivery Order confirmation is posted.']);
   b.callout('tip', 'Supervisors: open the Resend list once a day. It should be empty.');
+  b.H2('Status and Resend on the ticket itself');
+  b.P('Every ticket screen (11 Receiving Weighing, 12 Despatch Weighing, 16 First Weighing) shows, next to Container / Trailer, the ticket\'s Ref No / DO No, the bin, and whether the website accepted each weigh: **Accepted**, **NOT accepted** or **Not sent**.');
+  b.steps([
+    'Open the ticket.',
+    'Read the AllCosmos line. To send the ticket again (for example after adding the bin or correcting a weight), press **Resend to AllCosmos**.',
+    'If the ticket was already accepted, the program asks "Send it again?". Press **Yes**.',
+    'If a receiving ticket has no bin, the program offers the bin list first.',
+    'The reply shows the website\'s full answer, including the result of the Goods Receipt / Delivery Order confirmation in CSL.',
+  ]);
+  b.fig('ticket_status.png', 'Ticket screen: AllCosmos status and the Resend to AllCosmos button');
+  b.fig('resend_again_ok.png', 'Website reply after Resend (here CSL still asks for a bin)');
+  b.callout('note', 'Once CSL has posted the Goods Receipt or the delivery, the website refuses any change. The ticket then stays marked Accepted.');
 
   b.H1('8. Checking the Result on the Website');
   b.P('Anyone with a website login can check that a weighing arrived.');
@@ -101,6 +123,7 @@ module.exports = function guide() {
     'IT runs the AllCosmos set-up scripts supplied with the update (folder **sql**, scripts 001, 002 and 003) on the site database. They add the new fields and the message log; they do not change existing weighings.',
     'IT enters the three connection settings in the site\'s profile settings: the website address, the API user and the API password. The website team gives the user and password for the live site (the test site is https://allcosmos.domainsb.com.my/).',
     'Once the website data is copied into the site database (the data sync), IT runs script **004**. Until then the **...** button says the list is not available and operators type the Ref No / DO No.',
+    'IT runs script **005** (Bin Location). Then support enters the site\'s CSL bin codes in **294 Set AllCosmos Bin Location** (Chapter 10). Ask the CSL user for the exact codes.',
     'Restart the weighbridge program.',
     'Test with one receiving and one despatch lorry and check the website (Chapter 8).',
   ]);
@@ -113,10 +136,13 @@ module.exports = function guide() {
     ['The Ref No / DO list is empty', 'Check on the website that the planning line exists (for despatch: Delivery Date = today) and that the data sync to the site database is running. Operators can type the number meanwhile.'],
     ['Every ticket is refused with "Invalid username or password."', 'The API password was changed or has expired. IT enters the new one in the profile settings and restarts the program; then resend the tickets.'],
     ['"No answer from ..."', 'The weighbridge PC cannot reach the website (network, internet, website down). Check the connection, then resend.'],
-    ['Website says the GRN to CSL failed: "Bin Location can\'t be blank"', 'Known open point. The weighing and the website line are saved; the Goods Receipt in CSL is not. Follow up with the website team until a bin location is agreed.'],
+    ['Website says the GRN to CSL failed: "Bin Location can\'t be blank"', 'The ticket was saved without a bin. Open it (11 Receiving Weighing), press **Resend to AllCosmos** and pick the bin.'],
+    ['Website says the GRN to CSL failed for another reason (for example a bin or supplier CSL does not know)', 'The weighbridge part is done. The website team fixes the data and reposts the GRN on the website; nothing to do on the weighbridge.'],
+    ['Add, change or remove a bin', '**2. Table** > **29 More Master Setup** > **294 Set AllCosmos Bin Location**: key in the CSL bin code (max 15 characters) and a description, then save. Remove a bin that is no longer used. The website has no bin list, so this list is kept on the weighbridge.'],
     ['A question about one ticket', 'Every message to and from the website is recorded in the program\'s AllCosmos log (time, ticket, what was sent, the website\'s reply). IT can read it.'],
     ['New site or new PC', 'Repeat Chapter 9 steps 1, 5 and 6 (the database steps are once per site).'],
   ], [3.4, 6.6]);
+  b.fig('bin_master.png', '294 Set AllCosmos Bin Location: adding a bin');
 
   b.H1('11. Messages You May See');
   b.table(['Message', 'What it means / what to do'], [
@@ -129,7 +155,11 @@ module.exports = function guide() {
     ['The AllCosmos list (...) is not available yet. Type the Ref No. instead.', 'The website data is not in the site database yet (Chapter 9 step 4). Type the number.'],
     ['Ticket ..., lorry ...: Ref No is \'...\'. Pick a different one from the AllCosmos list?', 'Shown during Resend. Yes = choose another number; No = send with the same number.'],
     ['No AllCosmos tickets are waiting to be resent.', 'Nothing to do: every ticket was accepted.'],
-    ['Ticket ... accepted by AllCosmos.', 'The resend worked.'],
+    ['Ticket ... accepted by AllCosmos. <website reply>', 'The resend worked. Read the rest of the reply for the CSL result.'],
+    ['Ticket ... is already accepted by AllCosmos. Send it again?', 'Shown by Resend to AllCosmos on an accepted ticket. Yes sends it again (for example after a correction).'],
+    ['Bin Location is blank. CSL needs it for the GRN. Save anyway? ...', 'Receiving 2nd weigh without a bin. Answer No and pick the bin.'],
+    ['Ticket ...: Bin Location is blank and CSL needs it for the GRN. Pick one now?', 'Shown during Resend. Yes = pick the bin before sending.'],
+    ['The AllCosmos bin list (ACS_BIN_LOCATION) is not set up yet: run sql/005.', 'Script 005 has not been run on this site. Call support (Chapter 9).'],
     ['AllCosmos API is not set up: run sql/001-003 and fill in API URL, user and password in the profile table.', 'The link is switched off on this site. Call support (Chapter 9).'],
   ], [5, 5]);
 

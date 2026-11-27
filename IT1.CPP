@@ -94,9 +94,7 @@ BOOL CIt1::OnInitDialog()
 	SetDlgItemText( IDC_TITLE, t);
 
     if(!AcsIsActive(df)) {
-        GetDlgItem(IDC_ACS_REFNO_LABEL)->ShowWindow(SW_HIDE);
-        GetDlgItem(IDC_ACS_REFNO)->ShowWindow(SW_HIDE);
-        GetDlgItem(IDC_ACS_PICK)->ShowWindow(SW_HIDE);
+        AcsShowCtrls(this, FALSE, IDC_ACS_REFNO_LABEL, IDC_ACS_REFNO, IDC_ACS_PICK);
     }
     else if(iType==2) {
         SetDlgItemText(IDC_ACS_REFNO_LABEL, "AllCosmos DO No.");

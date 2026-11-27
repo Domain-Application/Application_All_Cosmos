@@ -53,7 +53,21 @@ Turns a FIRST / WB / DESPATCH row into the four calls. The API module knows noth
   `CAcsPickDlg` (FIRST / WB / DESPATCH union, newest first). The operator picks one;
   `TicketTable()` maps the Table column back to the `DB`. While `API_IN_OK` is not `Y`,
   `OfferNewRefNo()` asks "Pick a different one from the AllCosmos list?" and reuses
-  `AcsPickRefNo()`. Then one `AcsSendIn()` (FIRST) or `AcsSendOut()` (WB / DESPATCH).
+  `AcsPickRefNo()`. Then `AcsResendTicket()`.
+- `AcsResendTicket()` is shared by Utility 39 and the ticket screens' Resend button: confirm when
+  the flag is already `Y`, `OfferNewRefNo()` / `OfferBin()` when needed, then one `AcsSendIn()`
+  (FIRST, by table name) or `AcsSendOut()` (WB / DESPATCH). A refused resend of an accepted
+  ticket puts the flag back to `Y` (`Outcome()` always writes Y/N, but the website still holds
+  the accepted data). The success box shows `s_sLastReply` (set in `Outcome()`), so the GRN /
+  Confirm DO part of the reply is seen.
+- `bin_location` comes from `API_BIN`, sent only when not blank. `AcsHasBin()` = active and
+  sql/005 run; every bin control is hidden without it. `AcsPickBin()` lists `ACS_BIN_LOCATION`.
+- `AcsAdminBinLocation()` (menu 294) opens `ACS_BIN_LOCATION` on first use, not in
+  `OpenAllDataFile()`, because the table exists only after sql/005. It reuses `IDD_STATUS`
+  (code + description, like Container / Trailer), which binds columns by position: CODE and
+  DESCRIPTION must stay columns 1 and 2.
+- `AcsStatusText()` builds the two-line status for `CWb`; `AcsShowCtrls()` shows/hides up to three
+  controls (IT1, IT2, WB).
 - `AcsPickRefNo()` (the "..." button) shows the view in a `CAcsPickDlg`, leaving out numbers
   already on a lorry in the yard (`FIRST.API_REF_NO`). Receiving returns the PO unit as the 2nd
   column.
@@ -82,6 +96,16 @@ and dates in the SQL). Proven 2026-11-26 for the Ref No, DO No and resend lists.
   `OnInitDialog`). `PrintOneFormOnly()` never returns, the screen stays on "Proceeding..." and
   `AcsSendOut()` is not reached. On a test PC, post `IDCANCEL` to the hidden "Printing now..."
   window; on a site, Resend covers the ticket.
+- `IDC_ACS_REFNO` (read-only), `IDC_ACS_BIN` / `IDC_ACS_BIN_PICK` / `IDC_ACS_BIN_LABEL` (1287-1289)
+  sit right of Container/Trailer. `AcsBinIsOk()` runs after `IsSaveConditionOk()` and writes
+  `API_BIN` into `df` (FIRST); `OnSecond()`'s `fetch()` copies it to WB by name before `AddNew()`.
+
+## `WB.CPP` (AllCosmos part)
+
+`CWb` serves FIRST (menu 16), WB (11) and DESPATCH (12); `IDD_WB` and `IDD_DESPATCH` both carry
+`IDC_ACS_STATUS` (1290) and `IDC_ACS_RESEND` (1291) right of Container/Trailer.
+`ShowAcsStatus()` runs at the end of `ShowInformation()` (every record shown) and after a resend;
+the button is disabled while no ticket is loaded.
 
 ## Testing on a PC without the COM loop cable
 

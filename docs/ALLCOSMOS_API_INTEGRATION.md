@@ -29,7 +29,8 @@ The weighing is always saved first. The call comes after it and never stops the 
 | `supplier_delivery_qty` | Supplier Wt `SWT` (`m[0]`) |
 | (all three receiving quantities) | kg divided by the PO unit: KG ÷ 1, MT ÷ 1000. Any other unit: not sent, ticket flagged N |
 | `actual_weight` / `actual_unit` | Nett kg `m[11]` ÷ 1000 / `"MT"`. The website's Unit master has no KG (UAT: BTL, EA, LITRE, MT, PACK, PC), so a `"KG"` line is refused. |
-| `bin_location`, `lot_no` | Not sent (the guide calls them optional). `BIN` is used by prime-mover weighing and `LOTNO` holds the supplier D/O No., so neither means what the API means. Without `lot_no` the website uses the weigh-out date for the GRN. **Open point:** CSL rejects every GRN without a bin ("Bin Location can't be blank", see Test results). |
+| `bin_location` | `API_BIN` (sql/005): picked or typed on the receiving 2nd-weigh screen (max 15), from the `ACS_BIN_LOCATION` list support fills per site. Sent only when not blank. The website has no bin master (its "Location" is the Site), so the list is local until the website syncs CSL bins. `BIN` stays the prime-mover yard bin. |
+| `lot_no` | Not sent. `LOTNO` holds the supplier D/O No., not what the API means. Without it the website uses the weigh-out date for the GRN. |
 
 The PO unit (`API_UNIT`) comes with the Ref No from the pick list. If the Ref No was typed, the
 unit is looked up in `V_ACS_RECEIVING_REF` at Ticket Out.
@@ -62,6 +63,21 @@ itself.
 
 The website accepts a resend until the GRN / Confirm DO is Posted (guide 4.1).
 
+**On the ticket screens** (menu 11 Receiving, 12 Despatch, 16 First Weighing) a status line shows
+the Ref No / DO No, the bin, and "Accepted / NOT accepted / Not sent" for each weigh, with a
+**Resend to AllCosmos** button for that ticket. It works like step 2-3 above, and also:
+
+- An already accepted ticket asks "Send it again?" first (e.g. after correcting a weight). If the
+  website then refuses (for example the GRN is already Posted), the ticket stays marked accepted.
+- A receiving ticket with a blank bin offers the bin pick list before sending.
+- Success shows the website's full reply, so the operator also sees the GRN / Confirm DO result.
+
+## 2nd weigh
+
+The 2nd-weigh screen shows the ticket's AllCosmos Ref No / DO No read-only. Receiving also has
+**Bin Location** ("..." = pick list). Save with a Ref No but no bin asks "Save anyway?"; the bin
+can be added later with Resend on the ticket screen.
+
 ## Set-up
 
 1. Run `sql/001`–`003` (columns, log tables). Run `sql/004` once the website tables are synced
@@ -72,6 +88,9 @@ The website accepts a resend until the GRN / Confirm DO is Posted (guide 4.1).
    Ref No / DO No.
 4. The pick lists leave out numbers already on a lorry in the yard (`FIRST.API_REF_NO`). The DO
    list shows only DOs whose Delivery Date is today (James's query).
+5. Run `sql/005`, then enter the site's CSL bin codes in **Table > 29 More Master Setup > 294 Set
+   AllCosmos Bin Location** (code max 15 + description). Until `API_BIN` exists the 2nd-weigh
+   screen hides the bin box.
 
 `sql/900_TEST_ONLY_load_website_test_data.sql` creates the 11 website tables with test rows so that
 `sql/004` and the pick lists can be tried before the real sync exists. **Test databases only.**
@@ -116,8 +135,10 @@ Findings:
 
 - **CSL GRN needs `bin_location`.** Every Ticket Out reply ends with "Posting the GRN to CSL failed:
   CSL answered HTTP 400. Bin Location can't be blank". The guide calls the field optional;
-  production GRNs will fail the same way. Decision needed (Kelvin / James): one fixed bin per site
-  in `profile`, or a field on the 2nd-weigh screen.
+  production GRNs will fail the same way. Done (2026-11-27): Bin Location on the 2nd-weigh screen,
+  sent as `bin_location` (sql/005). Tested: S000164715 (ACST202) sent `"bin_location":"BIN-TEST"`;
+  CSL no longer asked for a bin and failed on the test supplier instead ("Vendor number not
+  exist/not active status").
 - **CSL Confirm DO** needs a numeric DO No (max 9 digits). With numeric DO 900260001 it still
   failed in UAT: "CSL answered HTTP 503. Service unavailable - failed to process the request Invalid
   division" (shown on the Daily Delivery Planning page). Test-data issue on CSL's side; the
@@ -137,6 +158,7 @@ Findings:
 - **Profile screen fields** for API URL / user / password: `CProfile` binds controls by column
   position, so they wait for the live column check on the site database. Until then, set the
   three values with SQL (`sql/README.md`).
-- **`bin_location`** - see Findings.
+- **Bin list**: the website has no bin master (confirmed 2026-11-27), so the weighbridge keeps its
+  own in `ACS_BIN_LOCATION`, maintained on menu 294.
 - **The website sync** (the 11 tables `sql/004` reads) is not this app's job and does not exist
   yet; `sql/900` stands in for it on test databases only.

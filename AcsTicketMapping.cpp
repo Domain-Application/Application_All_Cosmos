@@ -6,6 +6,7 @@
 #include "AcsWeighbridgeApi.h"
 #include "AcsTicketMapping.h"
 #include "AcsPickDlg.h"
+#include "admindb.h"
 #include <math.h>
 
 #ifdef _DEBUG
@@ -78,9 +79,31 @@ BOOL AcsIsDespatch(DB* df)
     return df->lval(GetDbFieldNo(df, _szPrintCounter)) == 2;
 }
 
+CString AcsTicketText(DB* df, const char* szField)
+{
+    return TicketText(df, szField);
+}
+
+void AcsShowCtrls(CWnd* pDlg, BOOL bShow, UINT id1, UINT id2, UINT id3)
+{
+    UINT ids[3] = { id1, id2, id3 };
+    for (int i = 0; i < 3; i++) {
+        CWnd* w = ids[i] ? pDlg->GetDlgItem(ids[i]) : NULL;
+        if (w) w->ShowWindow(bShow ? SW_SHOW : SW_HIDE);
+    }
+}
+
+static CString s_sLastReply;   // website message of the last call, shown after a resend
+
+BOOL AcsHasBin(DB* df)
+{
+    return AcsIsActive(df) && GetDbFieldNo(df, "API_BIN") > 0;
+}
+
 // Records the outcome on the ticket; the operator sees every failure once.
 static BOOL Outcome(DB* df, const char* szFlag, const char* szWhat, BOOL bOk, const CString& sMessage, BOOL bTell = TRUE)
 {
+    s_sLastReply = sMessage;
     SetTicketField(df, szFlag, bOk ? "Y" : "N");
     CString msg;
     msg.Format("AllCosmos %s, ticket %s: %s", szWhat, (LPCTSTR)Ticket(df), (LPCTSTR)sMessage);
@@ -167,6 +190,8 @@ BOOL AcsSendOut(DB* df)
     AcsJsonNumber(f, "received_qty", m[11] / dKg);
     AcsJsonNumber(f, "weighbridge_qty", fabs(m[5] - m[2]) / dKg);
     AcsJsonNumber(f, "supplier_delivery_qty", m[0] / dKg);
+    CString sBin = TicketText(df, "API_BIN");
+    if (!sBin.IsEmpty()) AcsJsonString(f, "bin_location", sBin);
     return Post(df, "API_OUT_OK", szWhat, "ticketout", f);
 }
 
@@ -203,6 +228,59 @@ BOOL AcsPickRefNo(BOOL bDespatch, CString& sRefNo, CString& sUnit)
     return TRUE;
 }
 
+static const char szNoBinTable[] = "The AllCosmos bin list (ACS_BIN_LOCATION) is not set up yet: run sql/005.";
+
+void AcsAdminBinLocation()
+{
+    static DB acsbin(IDD_STATUS);   // opened on first use: the table exists only after sql/005
+    static BOOL bOpen = FALSE;
+    if (!ObjectExists("tables", "ACS_BIN_LOCATION")) {
+        AfxMessageBox(szNoBinTable, MB_ICONINFORMATION);
+        return;
+    }
+    if (!bOpen) bOpen = ado(&acsbin, "ACS_BIN_LOCATION");
+    if (bOpen) AdminDb(&acsbin);
+}
+
+BOOL AcsPickBin(CString& sBin)
+{
+    if (!ObjectExists("tables", "ACS_BIN_LOCATION")) {
+        AfxMessageBox(szNoBinTable, MB_ICONINFORMATION);
+        return FALSE;
+    }
+    CAcsPickDlg dlg;
+    dlg.m_title = "AllCosmos Bin Location";
+    dlg.m_sql = "select CODE [Bin Location], isnull(DESCRIPTION, '') [Description] from ACS_BIN_LOCATION order by CODE";
+    if (dlg.DoModal() != IDOK || dlg.m_pick1.IsEmpty()) return FALSE;
+    sBin = dlg.m_pick1;
+    return TRUE;
+}
+
+static CString FlagText(DB* df, const char* szFlag)
+{
+    CString s = TicketText(df, szFlag);
+    if (s == "Y") return "Accepted";
+    if (s == "N") return "NOT accepted";
+    return "Not sent";
+}
+
+static BOOL IsFirstTable(DB* df)
+{
+    return !_stricmp(df->name, "FIRST");
+}
+
+CString AcsStatusText(DB* df)
+{
+    if (Ticket(df).IsEmpty()) return "";
+    BOOL bDespatch = AcsIsDespatch(df);
+    CString s, sRef = TicketText(df, "API_REF_NO");
+    s.Format("AllCosmos %s: %s", bDespatch ? "DO No" : "Ref No", sRef.IsEmpty() ? "(blank)" : (LPCTSTR)sRef);
+    if (!bDespatch && AcsHasBin(df)) s += "   Bin: " + TicketText(df, "API_BIN");
+    s += "\n1st weigh: " + FlagText(df, "API_IN_OK");
+    if (!IsFirstTable(df)) s += "    2nd weigh: " + FlagText(df, "API_OUT_OK");
+    return s;
+}
+
 static DB* TicketTable(const CString& sTable)
 {
     if (!sTable.CompareNoCase("WB")) return &wb;
@@ -221,6 +299,33 @@ static void OfferNewRefNo(DB* df)
     if (AfxMessageBox(sMsg, MB_YESNO | MB_ICONQUESTION) == IDYES && AcsPickRefNo(bDespatch, sRef, sUnit)) {
         SetTicketField(df, "API_REF_NO", sRef);
         SetTicketField(df, "API_UNIT", sUnit);
+    }
+}
+
+static void OfferBin(DB* df)
+{
+    if (AcsIsDespatch(df) || IsFirstTable(df) || !AcsHasBin(df) || !TicketText(df, "API_BIN").IsEmpty()) return;
+    CString sBin;
+    if (AfxMessageBox("Ticket " + Ticket(df) + ": Bin Location is blank and CSL needs it for the GRN.\n\nPick one now?",
+                      MB_YESNO | MB_ICONQUESTION) == IDYES && AcsPickBin(sBin)) {
+        SetTicketField(df, "API_BIN", sBin);
+    }
+}
+
+void AcsResendTicket(DB* df)
+{
+    if (!AcsIsActive(df) || Ticket(df).IsEmpty()) return;
+    const char* szFlag = IsFirstTable(df) ? "API_IN_OK" : "API_OUT_OK";
+    CString sWasFlag = TicketText(df, szFlag);
+    if (sWasFlag == "Y" && AfxMessageBox("Ticket " + Ticket(df) + " is already accepted by AllCosmos.\n\nSend it again?",
+                                         MB_YESNO | MB_ICONQUESTION) != IDYES) return;
+    if (TicketText(df, "API_IN_OK") != "Y") OfferNewRefNo(df);
+    OfferBin(df);
+    if (IsFirstTable(df) ? AcsSendIn(df) : AcsSendOut(df)) {
+        AfxMessageBox("Ticket " + Ticket(df) + " accepted by AllCosmos.\n\n" + s_sLastReply, MB_ICONINFORMATION);
+    }
+    else if (sWasFlag == "Y") {
+        SetTicketField(df, szFlag, "Y");   // the website still holds the earlier accepted data
     }
 }
 
@@ -246,9 +351,5 @@ void AcsResendPending()
     if (dlg.DoModal() != IDOK || dlg.m_pick1.IsEmpty()) return;
 
     DB* df = TicketTable(dlg.m_pick2);
-    if (!df->Search(dlg.m_pick1, TICKET, TRUE)) return;
-    if (TicketText(df, "API_IN_OK") != "Y") OfferNewRefNo(df);
-    if ((df == &first) ? AcsSendIn(df) : AcsSendOut(df)) {
-        AfxMessageBox("Ticket " + dlg.m_pick1 + " accepted by AllCosmos.", MB_ICONINFORMATION);
-    }
+    if (df->Search(dlg.m_pick1, TICKET, TRUE)) AcsResendTicket(df);
 }

@@ -24,6 +24,7 @@ public:
     void OnPrint();
     void SetOneTimeScreen();
     void ShowInformation();
+    void ShowAcsStatus();
     void ShowInitFrame(CMSFlexGrid *grid,DB *sub);
     void ReplaceSubGrid(long rec,long irec,CMSFlexGrid *m_grid,DB *sub,int IdxItem);
     void OnSearch();
@@ -64,6 +65,7 @@ protected:
 	afx_msg void OnPM1WT();
 	afx_msg void OnPM2WT();
 	afx_msg void OnSetCompleteTicket();
+	afx_msg void OnAcsResend();
 ;	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
