@@ -173,8 +173,9 @@ static CString HttpPostJson(const CString& sUrl, const CString& sJson, SAcsApiRe
 
     CInternetSession session("AllcosmosWeighbridge");
     session.SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, 10000);
-    session.SetOption(INTERNET_OPTION_SEND_TIMEOUT, 20000);
-    session.SetOption(INTERNET_OPTION_RECEIVE_TIMEOUT, 20000);
+    // 60 s: Ticket Out / DO Time Out answer only after the website's CSL call (up to 30 s) is done.
+    session.SetOption(INTERNET_OPTION_SEND_TIMEOUT, 60000);
+    session.SetOption(INTERNET_OPTION_RECEIVE_TIMEOUT, 60000);
     CHttpConnection* pConn = NULL;
     CHttpFile* pFile = NULL;
     try {

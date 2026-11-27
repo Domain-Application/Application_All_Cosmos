@@ -24,7 +24,9 @@ HTTP client for the AllcosmosSystem weighbridge API. Business view: `docs/ALLCOS
 - **Only `isSuccess` counts**, never the HTTP status. The scanner allows blanks around `:` because
   the site pretty-prints its JSON.
 - Numbers: `%.3f` then trailing zeros and the dot trimmed (API: at most 3 decimals).
-- Timeouts: connect 10 s, send/receive 20 s. The call runs on the UI thread after the save.
+- Timeouts: connect 10 s, send/receive 60 s. The call runs on the UI thread after the save. Ticket Out and
+  DO Time Out reply only after the website's own CSL call (GRN / Confirm DO, up to 30 s), so a shorter receive
+  timeout gives "The operation timed out" although the website saved the data.
 - Log tables are opened on first use and only if both exist (`sql/003`), so a site without the
   script never gets an "Invalid object name" error. `REQUEST_TS` / `RESPONSE_TS` are stamped in
   C++ because the ORM sends NULL, which bypasses a column DEFAULT.
